@@ -1,6 +1,6 @@
 #include "CommandRegistry.hpp"
 #include <dlfcn.h>
-#include <iostream>
+#include "orcha_pch.hpp"
 
 CommandRegistry::~CommandRegistry() {
     for (auto& plugin : plugins_) {

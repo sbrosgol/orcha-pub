@@ -4,11 +4,13 @@
 #include <cpprest/http_listener.h>
 #include <memory>
 
+#include "Logger.hpp"
+
 class CommandAgent {
 public:
-    CommandAgent(CommandRegistry& registry);
+    explicit CommandAgent(CommandRegistry& registry);
     void start(unsigned short port);
-    void stop();
+    void stop() const;
 private:
     void handle_request(web::http::http_request request);
 

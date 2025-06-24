@@ -21,6 +21,12 @@ add_library(core STATIC
         core/CommandRegistry.cpp
         core/CommandRegistry.hpp
 )
+
+add_library(logger STATIC
+        utils/Logger.cpp
+        utils/Logger.hpp
+)
+
 target_link_libraries(core PUBLIC cpprestsdk::cpprest dl)
 
 # Header-only utils library (modern CMake!)
@@ -31,19 +37,27 @@ add_library(workflow STATIC
         workflow/WorkflowRunner.cpp
         workflow/WorkflowRunner.hpp
 )
-target_link_libraries(workflow PUBLIC core utils yaml-cpp::yaml-cpp)
+target_link_libraries(workflow PUBLIC core utils yaml-cpp::yaml-cpp logger)
 
 add_library(agent STATIC
         agent/CommandAgent.cpp
         agent/CommandAgent.hpp
 )
-target_link_libraries(agent PUBLIC core workflow Boost::thread Boost::system cpprestsdk::cpprest)
+
+
+
+target_link_libraries(agent PUBLIC core workflow Boost::thread Boost::system cpprestsdk::cpprest logger)
 
 # Main executable
 add_executable(orcha
         main.cpp
 )
-target_link_libraries(orcha PRIVATE agent core workflow yaml-cpp::yaml-cpp utils)
+target_link_libraries(orcha PRIVATE agent core workflow yaml-cpp::yaml-cpp utils logger)
+
+target_precompile_headers(core PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(agent PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(workflow PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(orcha PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 
 # --- Automatically add all commands as plugins ---
 file(GLOB_RECURSE COMMAND_CANDIDATE_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/commands" "${CMAKE_SOURCE_DIR}/commands/*")
@@ -56,3 +70,8 @@ foreach(subdir ${COMMAND_CANDIDATE_DIRS})
 endforeach()
 
 message(STATUS "Registered command plugins from commands/ directory.")
+
+# On Unix-like systems, link dl for plugins. Remove/add as needed.
+if(NOT WIN32)
+    target_link_libraries(core PUBLIC dl)
+endif()
