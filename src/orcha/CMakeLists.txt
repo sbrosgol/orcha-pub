@@ -61,3 +61,8 @@ foreach(subdir ${COMMAND_CANDIDATE_DIRS})
 endforeach()
 
 message(STATUS "Registered command plugins from commands/ directory.")
+
+# On Unix-like systems, link dl for plugins. Remove/add as needed.
+if(NOT WIN32)
+    target_link_libraries(core PUBLIC dl)
+endif()
