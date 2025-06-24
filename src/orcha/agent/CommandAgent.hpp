@@ -4,6 +4,8 @@
 #include <cpprest/http_listener.h>
 #include <memory>
 
+#include "Logger.hpp"
+
 class CommandAgent {
 public:
     explicit CommandAgent(CommandRegistry& registry);

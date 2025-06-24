@@ -222,3 +222,69 @@ pplx::task<web::json::value> WorkflowRunner::run_and_report_async(const std::str
         return arr;
     });
 }
+
+// In WorkflowRunner.cpp
+pplx::task<web::json::value> WorkflowRunner::run_and_report_json(const web::json::value& workflow_json) {
+    // The logic will mirror run_and_report_async, but uses workflow_json directly
+    return pplx::create_task([=, this] {
+        std::vector<WorkflowStepResult> results;
+        std::mutex results_mutex;
+        std::vector<std::future<void>> futures;
+
+        if (!workflow_json.has_field(U("steps")) || !workflow_json.at(U("steps")).is_array()) {
+            web::json::value error = web::json::value::array();
+            error[0][U("success")] = web::json::value(false);
+            error[0][U("error_message")] = web::json::value::string("No 'steps' array in JSON.");
+            error[0][U("output")] = web::json::value::null();
+            return error;
+        }
+
+        auto steps = workflow_json.at(U("steps")).as_array();
+        for (const auto& step : steps) {
+            bool parallel = step.has_field(U("parallel")) && step.at(U("parallel")).as_bool();
+            std::string cmd_name = step.at(U("command")).as_string();
+            auto* cmd = registry_.get_command(cmd_name);
+            WorkflowStepResult result;
+
+            if (!cmd) {
+                result.success = false;
+                result.error_message = "Command not found: " + cmd_name;
+                std::lock_guard<std::mutex> lock(results_mutex);
+                results.push_back(result);
+                break;
+            }
+
+            web::json::value params = step.has_field(U("params")) ? step.at(U("params")) : web::json::value::object();
+            params = resolve_placeholders(params, results);
+
+            auto exec_func = [&, params, cmd]() {
+                try {
+                    result.output = cmd->execute(params);
+                    result.success = true;
+                } catch (const std::exception& ex) {
+                    result.success = false;
+                    result.error_message = ex.what();
+                }
+                std::lock_guard<std::mutex> lock(results_mutex);
+                results.push_back(result);
+            };
+
+            if (parallel) {
+                futures.push_back(std::async(std::launch::async, exec_func));
+            } else {
+                exec_func();
+                if (!result.success) break;
+            }
+        }
+
+        for (auto& fut : futures) if (fut.valid()) fut.get();
+
+        web::json::value arr = web::json::value::array();
+        for (size_t i = 0; i < results.size(); ++i) {
+            arr[i][U("success")] = web::json::value(results[i].success);
+            arr[i][U("error_message")] = web::json::value::string(results[i].error_message);
+            arr[i][U("output")] = results[i].output;
+        }
+        return arr;
+    });
+}

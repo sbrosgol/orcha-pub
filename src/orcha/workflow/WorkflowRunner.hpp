@@ -24,7 +24,7 @@ public:
 
     // Asynchronous: returns a task with JSON array of results (for HTTP/REST)
     pplx::task<web::json::value> run_and_report_async(const std::string& yaml_content);
-
+    pplx::task<web::json::value> run_and_report_json(const web::json::value& workflow_json);
     // Placeholder resolution (used internally)
     web::json::value resolve_placeholders(const web::json::value& input, const std::vector<WorkflowStepResult>& previous_results);
 

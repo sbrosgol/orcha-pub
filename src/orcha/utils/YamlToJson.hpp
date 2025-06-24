@@ -7,7 +7,7 @@
 inline web::json::value yaml_to_json(const YAML::Node& node) {
     using namespace web;
     if (node.IsScalar()) {
-        auto scalar = node.Scalar();
+        const auto scalar = node.Scalar();
         // Try to parse int, then double, then bool, else fallback to string
         try { return json::value(std::stoi(scalar)); } catch(...) {}
         try { return json::value(std::stod(scalar)); } catch(...) {}
