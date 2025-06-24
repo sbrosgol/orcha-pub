@@ -24,7 +24,7 @@ It dynamically loads command plugins, runs ordered or parallel workflows defined
 ### 1. Clone and Build
 
 ```bash
-git clone https://github.com/yourusername/orcha.git
+git clone (https://github.com/sbrosgol/orcha-pub.git)
 cd orcha
 # Install vcpkg dependencies
 vcpkg install boost-thread boost-system cpprestsdk yaml-cpp
