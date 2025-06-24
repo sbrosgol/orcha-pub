@@ -2,10 +2,10 @@
 #include <cpprest/json.h>
 #include <string>
 
-class EchoCommand : public ICommand {
+class EchoCommand final : public ICommand {
 public:
     web::json::value execute(const web::json::value& params) override {
-        auto msg = params.has_field(U("message")) ? params.at(U("message")).as_string() : U("");
+        const auto msg = params.has_field(U("message")) ? params.at(U("message")).as_string() : U("");
         web::json::value result;
         result[U("echoed")] = web::json::value::string(msg);
         return result;
