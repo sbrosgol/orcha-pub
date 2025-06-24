@@ -1,6 +1,16 @@
 # Prerequisites
 *.d
 
+# CLion & JetBrains IDE
+.idea/
+cmake-build-*/
+cmake-build-debug/
+cmake-build-release/
+CMakeSettings.json
+CMakeLists.txt.user
+# JetBrains specific (if you ever use Rider for C++)
+*.iml
+
 # Compiled Object files
 *.slo
 *.lo
@@ -30,3 +40,24 @@
 *.exe
 *.out
 *.app
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+build/
+_build/
+_builds/
+Testing/
+CTestTestfile.cmake
+install_manifest.txt
+
+# VSCode (optional)
+.vscode/
+
+# MacOS Finder
+.DS_Store
+
+# PowerShell download cache
+.pwsh_embedded/
