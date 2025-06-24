@@ -45,6 +45,11 @@ add_executable(orcha
 )
 target_link_libraries(orcha PRIVATE agent core workflow yaml-cpp::yaml-cpp utils)
 
+target_precompile_headers(core PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(agent PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(workflow PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(orcha PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+
 # --- Automatically add all commands as plugins ---
 file(GLOB_RECURSE COMMAND_CANDIDATE_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/commands" "${CMAKE_SOURCE_DIR}/commands/*")
 foreach(subdir ${COMMAND_CANDIDATE_DIRS})
