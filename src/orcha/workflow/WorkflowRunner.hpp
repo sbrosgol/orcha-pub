@@ -26,7 +26,7 @@ public:
     pplx::task<web::json::value> run_and_report_async(const std::string& yaml_content);
     pplx::task<web::json::value> run_and_report_json(const web::json::value& workflow_json);
     // Placeholder resolution (used internally)
-    web::json::value resolve_placeholders(const web::json::value& input, const std::vector<WorkflowStepResult>& previous_results);
+    static web::json::value resolve_placeholders(const web::json::value& input, const std::vector<WorkflowStepResult>& previous_results);
 
 private:
     CommandRegistry& registry_;
