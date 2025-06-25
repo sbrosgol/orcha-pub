@@ -59,12 +59,14 @@ target_precompile_headers(agent PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 target_precompile_headers(workflow PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 target_precompile_headers(orcha PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 
-# --- Automatically add all commands as plugins ---
-file(GLOB_RECURSE COMMAND_CANDIDATE_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/commands" "${CMAKE_SOURCE_DIR}/commands/*")
-foreach(subdir ${COMMAND_CANDIDATE_DIRS})
+# --- Automatically add all command plugins from /commands ---
+file(GLOB COMMAND_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/commands" "${CMAKE_SOURCE_DIR}/commands/*")
+
+foreach(subdir ${COMMAND_DIRS})
     if(IS_DIRECTORY "${CMAKE_SOURCE_DIR}/commands/${subdir}")
         if(EXISTS "${CMAKE_SOURCE_DIR}/commands/${subdir}/CMakeLists.txt")
-            add_subdirectory("commands/${subdir}")
+            add_subdirectory(commands/${subdir})
+            message(STATUS "Added command plugin: ${subdir}")
         endif()
     endif()
 endforeach()
