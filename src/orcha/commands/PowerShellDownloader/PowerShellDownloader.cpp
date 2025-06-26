@@ -31,13 +31,13 @@ public:
 
         try {
             // Create client and GET request
-            web::http::client::http_client client(utility::conversions::to_string_t(ps_url));
+            http::client::http_client client(utility::conversions::to_string_t(ps_url));
             std::cout << "Downloading PowerShell Core from: " << ps_url << std::endl;
-            auto response = client.request(web::http::methods::GET).get();
+            const auto response = client.request(web::http::methods::GET).get();
 
             // Write to file using cpprestsdk streams
-            concurrency::streams::ostream out = concurrency::streams::fstream::open_ostream(ps_archive).get();
-            response.body().read_to_end(out.streambuf()).wait();
+            const concurrency::streams::ostream out = concurrency::streams::fstream::open_ostream(ps_archive).get();
+            (void)response.body().read_to_end(out.streambuf()).wait();
             (void)out.close().wait();
 
             std::cout << "Download complete: " << ps_archive << std::endl;
@@ -52,8 +52,8 @@ public:
             std::string mkdir_cmd = "mkdir -p " + ps_folder;
             system(mkdir_cmd.c_str());
             std::string untar_cmd = "tar -xzf " + ps_archive + " -C " + ps_folder + " --strip-components=1";
-            int untar_result = system(untar_cmd.c_str());
-            if (untar_result != 0) throw std::runtime_error("Untar failed.");
+            if (int untar_result = system(untar_cmd.c_str()); untar_result != 0)
+                throw std::runtime_error("Untar failed.");
             std::string ps_path = ps_folder + "/pwsh";
             int chmod_result = system(("chmod +x " + ps_path).c_str());
             if (chmod_result != 0) throw std::runtime_error("chmod failed.");
@@ -70,7 +70,7 @@ public:
         return result;
     }
 
-    std::string name() const override { return "download_pwsh"; }
+    [[nodiscard]] std::string name() const override { return "download_pwsh"; }
 };
 
 extern "C" ICommand* create_command() {
