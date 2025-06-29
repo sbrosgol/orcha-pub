@@ -30,7 +30,6 @@ public:
         json::value result;
 
         try {
-            // Download PowerShell archive
             http::client::http_client client(utility::conversions::to_string_t(ps_url));
             std::cout << "Downloading PowerShell Core from: " << ps_url << std::endl;
             const auto response = client.request(web::http::methods::GET).get();
@@ -51,7 +50,7 @@ public:
             std::string mkdir_cmd = "mkdir -p " + ps_folder;
             system(mkdir_cmd.c_str());
 
-            std::string untar_cmd = "tar -xzf " + ps_archive + " -C " + ps_folder;
+            const std::string untar_cmd = "tar -xzf " + ps_archive + " -C " + ps_folder;
             std::cout << "Extracting archive with: " << untar_cmd << std::endl;
             int untar_result = system(untar_cmd.c_str());
             if (untar_result != 0)
