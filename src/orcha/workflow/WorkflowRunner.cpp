@@ -50,7 +50,7 @@ web::json::value WorkflowRunner::resolve_placeholders(const web::json::value& in
         while (std::regex_search(s, match, re)) {
             int idx = std::stoi(match[1].str()) - 1;
             std::string field_path = match[2].str();
-            std::string value = "";
+            std::string value;
             if (idx >= 0 && idx < (int)previous_results.size()) {
                 auto out = previous_results[idx].output;
                 if (!field_path.empty()) {
@@ -96,7 +96,7 @@ web::json::value WorkflowRunner::resolve_placeholders(const web::json::value& in
     return input;
 }
 
-bool WorkflowRunner::run(const std::string& yaml_path, std::vector<WorkflowStepResult>& step_results) {
+bool WorkflowRunner::run(const std::string& yaml_path, std::vector<WorkflowStepResult>& step_results) const {
     YAML::Node config = YAML::LoadFile(yaml_path);
     if (!config["steps"]) {
         std::cerr << "No 'steps' defined in YAML." << std::endl;
@@ -152,7 +152,7 @@ bool WorkflowRunner::run(const std::string& yaml_path, std::vector<WorkflowStepR
     return std::all_of(step_results.begin(), step_results.end(), [](const auto& r) { return r.success; });
 }
 
-pplx::task<web::json::value> WorkflowRunner::run_and_report_async(const std::string& yaml_content) {
+pplx::task<web::json::value> WorkflowRunner::run_and_report_async(const std::string& yaml_content) const {
     return pplx::create_task([=, this] {
         YAML::Node config = YAML::Load(yaml_content);
         std::vector<WorkflowStepResult> results;
@@ -223,7 +223,7 @@ pplx::task<web::json::value> WorkflowRunner::run_and_report_async(const std::str
 }
 
 // In WorkflowRunner.cpp
-pplx::task<web::json::value> WorkflowRunner::run_and_report_json(const web::json::value& workflow_json) {
+pplx::task<web::json::value> WorkflowRunner::run_and_report_json(const web::json::value& workflow_json) const {
     // The logic will mirror run_and_report_async, but uses workflow_json directly
     return pplx::create_task([=, this] {
         std::vector<WorkflowStepResult> results;
