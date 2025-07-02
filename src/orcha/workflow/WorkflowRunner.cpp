@@ -3,6 +3,7 @@
 #include <mutex>
 #include <future>
 #include <algorithm>
+#include <complex>
 #include <iostream>
 #include <pplx/pplxtasks.h>
 
@@ -272,7 +273,8 @@ pplx::task<web::json::value> WorkflowRunner::run_and_report_json(const web::json
                 futures.push_back(std::async(std::launch::async, exec_func));
             } else {
                 exec_func();
-                if (!result.success) break;
+                bool success = result.success;
+                if (!success) break;
             }
         }
 
