@@ -1,0 +1,11 @@
+steps:
+  - command: echo
+    params:
+      message: "Starting PowerShell Core download..."
+
+  - command: download_pwsh
+    params: {}
+
+  - command: echo
+    params:
+      message: "PowerShell was downloaded to {{step2.output.path}}"

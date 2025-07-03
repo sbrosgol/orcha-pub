@@ -12,7 +12,7 @@ class CommandRegistry {
 public:
     ~CommandRegistry();
     bool load_command_library(const std::string& path);
-    ICommand* get_command(const std::string& name) const;
+    [[nodiscard]] ICommand* get_command(const std::string& name) const;
 private:
     struct PluginHandle {
         void* handle = nullptr;
