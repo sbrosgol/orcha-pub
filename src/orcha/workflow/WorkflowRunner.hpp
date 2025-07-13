@@ -20,11 +20,11 @@ public:
         : registry_(registry) {}
 
     // Synchronous CLI usage (returns true on success, fills step_results)
-    bool run(const std::string& yaml_path, std::vector<WorkflowStepResult>& step_results);
+    bool run(const std::string& yaml_path, std::vector<WorkflowStepResult>& step_results) const;
 
     // Asynchronous: returns a task with JSON array of results (for HTTP/REST)
-    pplx::task<web::json::value> run_and_report_async(const std::string& yaml_content);
-    pplx::task<web::json::value> run_and_report_json(const web::json::value& workflow_json);
+    [[nodiscard]] pplx::task<web::json::value> run_and_report_async(const std::string& yaml_content) const;
+    [[nodiscard]] pplx::task<web::json::value> run_and_report_json(const web::json::value& workflow_json) const;
     // Placeholder resolution (used internally)
     static web::json::value resolve_placeholders(const web::json::value& input, const std::vector<WorkflowStepResult>& previous_results);
 
