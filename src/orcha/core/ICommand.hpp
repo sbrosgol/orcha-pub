@@ -9,7 +9,7 @@
 class ICommand {
 public:
     virtual ~ICommand() = default;
-    virtual std::string name() const = 0;
+    [[nodiscard]] virtual std::string name() const = 0;
     virtual web::json::value execute(const web::json::value& params) = 0;
     virtual void rollback(const web::json::value&) {}
 };
