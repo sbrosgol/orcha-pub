@@ -18,9 +18,9 @@ void Logger::set_log_file(const std::string& filename) {
 
 std::string Logger::timestamp() {
     using namespace std::chrono;
-    auto now = system_clock::now();
+    const auto now = system_clock::now();
     auto t_c = system_clock::to_time_t(now);
-    std::tm tm;
+    std::tm tm{};
 #if defined(_WIN32)
     localtime_s(&tm, &t_c);
 #else
@@ -47,7 +47,7 @@ void Logger::log(LogLevel level, const std::string& msg) {
     oss << "[" << timestamp() << "][" << level_to_string(level) << "] " << msg << std::endl;
     std::string line = oss.str();
 
-    // Write to appropriate stream
+    // Write to an appropriate stream
     if (level == LogLevel::INFO || level == LogLevel::DEBUG)
         std::cout << line;
     else

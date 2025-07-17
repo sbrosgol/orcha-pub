@@ -5,6 +5,9 @@
 namespace fs = std::filesystem;
 
 int main(int argc, char* argv[]) {
+
+    Logger::instance().set_log_file("./orcha.log");
+    Logger::instance().log(LogLevel::INFO, "Starting Orcha...");
     CommandRegistry registry;
     std::string commands_dir = "./commands";
     std::string ext =
@@ -56,8 +59,11 @@ int main(int argc, char* argv[]) {
 
     std::cout << "[Orcha] Listening on http://localhost:8070/\n";
     std::cout << "[Orcha] Press Enter to exit...\n";
+
     std::cin.get();
 
+
+    Logger::instance().log(LogLevel::INFO, "Shutting down Orcha...");
     agent.stop();
     std::cout << "[Orcha] Shutdown complete.\n";
     return 0;

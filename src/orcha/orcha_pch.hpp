@@ -12,3 +12,4 @@
 #include <algorithm>
 #include <regex>
 #include <thread>
+#include "utils/Logger.hpp"
