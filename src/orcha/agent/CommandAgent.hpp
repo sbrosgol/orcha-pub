@@ -12,7 +12,7 @@ public:
     void start(unsigned short port);
     void stop() const;
 private:
-    void handle_request(web::http::http_request request);
+    void handle_request(web::http::http_request request) const;
 
     CommandRegistry& registry_;
     WorkflowRunner runner_;

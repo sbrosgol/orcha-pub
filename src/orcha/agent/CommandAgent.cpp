@@ -9,19 +9,20 @@ CommandAgent::CommandAgent(CommandRegistry& registry)
     : registry_(registry), runner_(registry) {}
 
 void CommandAgent::start(unsigned short port) {
-    auto uri_string = utility::conversions::to_string_t("http://0.0.0.0:" + std::to_string(port) + "/");
+    const auto uri_string = utility::conversions::to_string_t("http://0.0.0.0:" + std::to_string(port) + "/");
     const uri_builder uri(uri_string);
 
     listener_ = std::make_unique<http_listener>(uri.to_uri());
     listener_->support([this](const http_request& request) { handle_request(request); });
 
+    Logger::info("CommandAgent starting on port " + std::to_string(port));
     try {
         (void)listener_->open().wait();
         std::cout << "[Orcha] CommandAgent listening on port " << port << std::endl;
-        Logger::info("CommandAgent listening on port " + std::to_string(port));
+        Logger::instance().log(LogLevel::INFO, "CommandAgent listening on port " + std::to_string(port));
     } catch (const std::exception& ex) {
         std::cerr << "[Orcha] Failed to open HTTP listener on port " << port << ": " << ex.what() << std::endl;
-        Logger::error(std::string("Failed to open HTTP listener on port ")
+        Logger::instance().log(LogLevel::ERROR, std::string("Failed to open HTTP listener on port ")
                         + std::to_string(port) + ": " + ex.what());
         throw;
     }
@@ -32,10 +33,10 @@ void CommandAgent::stop() const {
         (void)listener_->close().wait();
 }
 
-void CommandAgent::handle_request(http_request request) {
+void CommandAgent::handle_request(http_request request) const {
     auto path = request.request_uri().path();
     auto method = request.method();
-    Logger::info("Received " + utility::conversions::to_utf8string(method)
+    Logger::instance().log(LogLevel::INFO, "Received " + utility::conversions::to_utf8string(method)
                  + " request at path: " + utility::conversions::to_utf8string(path));
 
     if (request.method() == methods::GET && (path == U("/") || path.empty())) {
@@ -44,7 +45,7 @@ void CommandAgent::handle_request(http_request request) {
             resp.headers().add(header_names::content_type, "text/plain; charset=utf-8");
             resp.set_body("Orcha Command Agent is running.\nPOST your YAML workflow to /workflow");
             (void)request.reply(resp);
-            Logger::debug("Health check endpoint hit.");
+            Logger::instance().log(LogLevel::DEBUG, "Health check endpoint hit.");
         }).then([](const pplx::task<void> &t) { try { t.get(); } catch (...) {} });
     }
     else if (request.method() == methods::POST && path == U("/workflow")) {
