@@ -6,11 +6,11 @@ namespace fs = std::filesystem;
 
 int main(int argc, char* argv[]) {
 
-    Logger::instance().set_log_file("./orcha.log");
+    Logger::instance().set_log_file("./logs2/orcha.log");
     Logger::instance().log(LogLevel::INFO, "Starting Orcha...");
     CommandRegistry registry;
-    std::string commands_dir = "./commands";
-    std::string ext =
+    const std::string commands_dir = "./commands";
+    const std::string ext =
 #if defined(_WIN32)
         ".dll";
 #elif defined(__APPLE__)

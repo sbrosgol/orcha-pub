@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 Logger& Logger::instance() {
     static Logger logger;
@@ -12,6 +13,14 @@ Logger::Logger() = default;
 
 void Logger::set_log_file(const std::string& filename) {
     std::lock_guard<std::mutex> lock(mtx_);
+    if (!filename.empty()) {
+        std::filesystem::path p(filename);
+        auto dir = p.parent_path();
+        if (!dir.empty()) {
+            std::filesystem::create_directories(dir);
+        }
+    }
+    file_.rdbuf()->pubsetbuf(0, 0);
     file_.open(filename, std::ios::app);
     use_file_ = file_.is_open();
 }
@@ -53,5 +62,8 @@ void Logger::log(LogLevel level, const std::string& msg) {
     else
         std::cerr << line;
 
-    if (use_file_) file_ << line;
+    if (use_file_) {
+        file_ << line;
+        file_.flush();
+    }
 }
