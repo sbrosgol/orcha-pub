@@ -150,7 +150,7 @@ bool WorkflowRunner::run(const std::string& yaml_path, std::vector<WorkflowStepR
         if (fut.valid())
             fut.get();
     }
-    return std::all_of(step_results.begin(), step_results.end(), [](const auto& r) { return r.success; });
+    return std::ranges::all_of(step_results, [](const auto& r) { return r.success; });
 }
 
 pplx::task<web::json::value> WorkflowRunner::run_and_report_async(const std::string& yaml_content) const {
@@ -273,8 +273,7 @@ pplx::task<web::json::value> WorkflowRunner::run_and_report_json(const web::json
                 futures.push_back(std::async(std::launch::async, exec_func));
             } else {
                 exec_func();
-                bool success = result.success;
-                if (!success) break;
+                if (!result.success) break;
             }
         }
 
