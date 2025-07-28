@@ -9,22 +9,34 @@
 namespace fs = std::filesystem;
 
 #if defined(_WIN32)
+#if defined(_M_ARM64)
+const std::string ps_url = "https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/PowerShell-7.5.2-win-arm64.zip";
+#else
 const std::string ps_url = "https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/PowerShell-7.5.2-win-x64.zip";
+#endif
 const std::string ps_archive = "PowerShell.zip";
 const std::string ps_folder = "pwsh_win";
 #else
 #if defined(__APPLE__)
+#if defined(__arm64__)
+const std::string ps_url = "https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/powershell-7.5.2-osx-arm64.tar.gz";
+#else
 const std::string ps_url = "https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/powershell-7.5.2-osx-x64.tar.gz";
+#endif
+#else
+#if defined(__aarch64__)
+const std::string ps_url = "https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/powershell-7.5.2-linux-arm64.tar.gz";
 #else
 const std::string ps_url = "https://github.com/PowerShell/PowerShell/releases/download/v7.5.2/powershell-7.5.2-linux-x64.tar.gz";
+#endif
 #endif
 const std::string ps_archive = "powershell.tar.gz";
 const std::string ps_folder = "pwsh";
 #endif
 
-class PowerShellDownloader : public ICommand {
+class PowerShellDownloader final : public ICommand {
 public:
-    web::json::value execute(const web::json::value& params) override {
+    web::json::value execute(const web::json::value &params) override {
         using namespace web;
         using namespace utility;
         json::value result;
@@ -35,8 +47,8 @@ public:
             const auto response = client.request(web::http::methods::GET).get();
 
             const concurrency::streams::ostream out = concurrency::streams::fstream::open_ostream(ps_archive).get();
-            (void)response.body().read_to_end(out.streambuf()).wait();
-            (void)out.close().wait();
+            (void) response.body().read_to_end(out.streambuf()).wait();
+            (void) out.close().wait();
 
             std::cout << "Download complete: " << ps_archive << std::endl;
 
@@ -58,7 +70,7 @@ public:
 
             std::string ps_path;
 
-            for (const auto& entry : fs::recursive_directory_iterator(ps_folder)) {
+            for (const auto &entry: fs::recursive_directory_iterator(ps_folder)) {
                 if (entry.path().filename() == "pwsh" && fs::is_regular_file(entry)) {
                     ps_path = entry.path().string();
                     break;
@@ -78,7 +90,7 @@ public:
 
             result[U("path")] = json::value::string(conversions::to_string_t(ps_path));
             result[U("success")] = json::value(true);
-        } catch (const std::exception& ex) {
+        } catch (const std::exception &ex) {
             std::cout << "Error: " << ex.what() << std::endl;
             result[U("success")] = json::value(false);
             result[U("error")] = json::value::string(ex.what());
@@ -90,6 +102,6 @@ public:
     [[nodiscard]] std::string name() const override { return "download_pwsh"; }
 };
 
-extern "C" ICommand* create_command() {
+extern "C" ICommand *create_command() {
     return new PowerShellDownloader();
 }
