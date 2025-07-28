@@ -4,7 +4,7 @@
 
 namespace fs = std::filesystem;
 
-int main(int argc, char* argv[]) {
+auto main(int argc, char *argv[]) -> int {
 
     Logger::instance().set_log_file("./logs2/orcha.log");
     Logger::instance().log(LogLevel::INFO, "Starting Orcha...");
