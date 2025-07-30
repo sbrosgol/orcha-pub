@@ -12,5 +12,9 @@
 #include <algorithm>
 #include <regex>
 #include <thread>
+#include <fstream>
+#include <queue>
+#include <condition_variable>
+#include <atomic>
 #include "external/pogocache/src/pogocache.h"
 #include "utils/Logger.hpp"
