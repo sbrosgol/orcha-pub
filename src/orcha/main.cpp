@@ -1,3 +1,4 @@
+#include <filesystem>
 #include "core/CommandRegistry.hpp"
 #include "agent/CommandAgent.hpp"
 #include "workflow/WorkflowRunner.hpp"
