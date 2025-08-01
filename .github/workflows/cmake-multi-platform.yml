@@ -95,6 +95,23 @@ jobs:
         python patch_logger.py
       shell: bash
 
+    - name: Patch main.cpp for missing includes
+      run: |
+        cat <<EOF > patch_main.py
+        import sys
+        file = 'src/orcha/main.cpp'
+        with open(file, 'r') as f:
+            lines = f.readlines()
+        has_fs = any('<filesystem>' in l for l in lines)
+        if not has_fs:
+            with open(file, 'w') as f:
+                if not has_fs:
+                    f.write('#include <filesystem>\n')
+                f.writelines(lines)
+        EOF
+        python patch_main.py
+      shell: bash
+
     - name: Configure CMake
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
@@ -102,6 +119,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DCMAKE_CXX_STANDARD=17
+        -DCMAKE_CXX_STANDARD_REQUIRED=ON
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
         -S ${{ github.workspace }}/src/orcha
 
