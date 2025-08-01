@@ -61,7 +61,7 @@ jobs:
       shell: cmd
       run: |
         echo import json > patch.py
-        echo with open^("vcpkg.json"^, ^"r+^"^) as f: >> patch.py
+        echo with open^("src/orcha/vcpkg.json"^, ^"r+^"^) as f: >> patch.py
         echo     data = json.load^(f^) >> patch.py
         echo     deps = data.get^("dependencies"^, []^) >> patch.py
         echo     for i in range^(len^(deps^)^): >> patch.py
@@ -74,7 +74,11 @@ jobs:
         echo     json.dump^(data^, f^, indent=4^) >> patch.py
         echo     f.truncate^() >> patch.py
         python patch.py
-      working-directory: ${{ github.workspace }}\src\orcha
+
+    - name: Patch Logger.cpp for missing includes
+      run: |
+        python -c "import sys; file = 'src/orcha/utils/Logger.cpp'; with open(file, 'r') as f: lines = f.readlines(); has_fs = any('<filesystem>' in l for l in lines); has_iom = any('<iomanip>' in l for l in lines); added = (not has_fs) or (not has_iom); if added: with open(file, 'w') as f: if not has_fs: f.write('#include <filesystem>\n'); if not has_iom: f.write('#include <iomanip>\n'); f.writelines(lines)"
+      shell: bash
 
     - name: Configure CMake
       run: >
@@ -82,6 +86,7 @@ jobs:
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_CXX_STANDARD=17
         -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
         -S ${{ github.workspace }}/src/orcha
 
