@@ -72,6 +72,18 @@ jobs:
       working-directory: ${{ github.workspace }}\vcpkg
       shell: cmd
       
+    - name: Install dependencies with vcpkg (Unix)
+      if: runner.os != 'Windows'
+      run: ./vcpkg/vcpkg install
+      working-directory: ${{ github.workspace }}
+      shell: bash
+
+    - name: Install dependencies with vcpkg (Windows)
+      if: runner.os == 'Windows'
+      run: .\vcpkg\vcpkg install
+      working-directory: ${{ github.workspace }}
+      shell: cmd
+      
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
