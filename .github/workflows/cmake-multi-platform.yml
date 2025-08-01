@@ -131,15 +131,15 @@ jobs:
       run: |
         cat <<EOF > patch_psd.py
         import sys
+        import re
         file = 'src/orcha/commands/PowerShellDownloader/PowerShellDownloader.cpp'
         with open(file, 'r') as f:
             content = f.read()
         content = content.replace('<cpprest/basic_utils.h>', '<cpprest/asyncrt_utils.h>')
         if '<cpprest/asyncrt_utils.h>' not in content:
-            content = content.replace('#include <string>', '#include <string>\n#include <cpprest/asyncrt_utils.h>')
-        content = content.replace('open_ostream(ps_archive', 'open_ostream(utility::conversions::to_string_t(ps_archive')
-        content = content.replace('json::value::string(conversions::to_string_t(ps_path))', 'json::value(conversions::to_string_t(ps_path))')
-        content = content.replace('json::value::string(ex.what())', 'json::value(utility::conversions::to_string_t(ex.what()))')
+            content = content.replace('#include <cpprest/filestream.h>', '#include <cpprest/filestream.h>\n#include <cpprest/asyncrt_utils.h>')
+        content = content.replace('open_ostream(ps_archive', 'open_ostream(utility::conversions::to_string_t(ps_archive)')
+        content = re.sub(r'json::value::string\s*\(', r'json::value(', content)
         content = content.replace('json::value(true)', 'json::value::boolean(true)')
         content = content.replace('json::value(false)', 'json::value::boolean(false)')
         with open(file, 'w') as f:
@@ -153,6 +153,7 @@ jobs:
       run: |
         cat <<EOF > patch_wf.py
         import sys
+        import re
         file = 'src/orcha/workflow/WorkflowRunner.cpp'
         with open(file, 'r') as f:
             content = f.read()
@@ -161,7 +162,7 @@ jobs:
         content = content.replace('std::string cmd_name = step.at(U("command")).as_string();', 'std::string cmd_name = utility::conversions::to_utf8string(step.at(U("command")).as_string());')
         content = content.replace('json::value::string("No \'steps\' defined in YAML.")', 'json::value(U("No \'steps\' defined in YAML."))')
         content = content.replace('json::value::string("No \'steps\' array in JSON.")', 'json::value(U("No \'steps\' array in JSON."))')
-        content = content.replace('json::value::string(results[i].error_message)', 'json::value(utility::conversions::to_string_t(results[i].error_message))')
+        content = re.sub(r'json::value::string\s*\(', r'json::value(utility::conversions::to_string_t(', content)
         content = content.replace('json::value(false)', 'json::value::boolean(false)')
         content = content.replace('json::value(true)', 'json::value::boolean(true)')
         with open(file, 'w') as f:
@@ -175,12 +176,13 @@ jobs:
       run: |
         cat <<EOF > patch_yaml.py
         import sys
+        import re
         file = 'src/orcha/utils/YamlToJson.hpp'
         with open(file, 'r') as f:
             content = f.read()
         if '<cpprest/asyncrt_utils.h>' not in content:
             content = content.replace('#include <yaml-cpp/yaml.h>', '#include <yaml-cpp/yaml.h>\n#include <cpprest/asyncrt_utils.h>')
-        content = content.replace('json::value::string(', 'json::value(utility::conversions::to_string_t(')
+        content = re.sub(r'json::value::string\s*\(', r'json::value(utility::conversions::to_string_t(', content)
         with open(file, 'w') as f:
             f.write(content)
         EOF
