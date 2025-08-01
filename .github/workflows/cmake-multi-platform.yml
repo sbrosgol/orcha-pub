@@ -62,10 +62,19 @@ jobs:
 
     - name: List repository files
       run: ls -l
-      
+    
+    - name: Ensure vcpkg is present and bootstrap
+      run: |
+        if [ ! -d "vcpkg" ]; then
+          git clone https://github.com/microsoft/vcpkg.git
+        fi
+        cd vcpkg
+        ./bootstrap-vcpkg.sh
+      shell: bash
+  
     - name: Bootstrap vcpkg (Unix)
       if: runner.os != 'Windows'
-      run: ./vcpkg/bootstrap-vcpkg.sh
+      run: ./bootstrap-vcpkg.sh
       working-directory: ${{ github.workspace }}/vcpkg
       shell: bash
 
