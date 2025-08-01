@@ -133,23 +133,73 @@ jobs:
         import sys
         file = 'src/orcha/commands/PowerShellDownloader/PowerShellDownloader.cpp'
         with open(file, 'r') as f:
-            lines = f.readlines()
-        has_utils = any('<cpprest/basic_utils.h>' in l for l in lines)
-        if not has_utils:
-            with open(file, 'w') as f:
-                f.write('#include <cpprest/basic_utils.h>\n')
-                f.writelines(lines)
-        else:
-            with open(file, 'w') as f:
-                f.writelines(lines)
-        with open(file, 'r') as f:
             content = f.read()
-        content = content.replace('open_ostream(filename', 'open_ostream(utility::conversions::to_string_t(filename')
-        content = content.replace('value::string(', 'value::string(utility::conversions::to_string_t(')
+        content = content.replace('<cpprest/basic_utils.h>', '<cpprest/asyncrt_utils.h>')
+        if '<cpprest/asyncrt_utils.h>' not in content:
+            content = content.replace('#include <string>', '#include <string>\n#include <cpprest/asyncrt_utils.h>')
+        content = content.replace('open_ostream(ps_archive', 'open_ostream(utility::conversions::to_string_t(ps_archive')
+        content = content.replace('json::value::string(conversions::to_string_t(ps_path))', 'json::value(conversions::to_string_t(ps_path))')
+        content = content.replace('json::value::string(ex.what())', 'json::value(utility::conversions::to_string_t(ex.what()))')
+        content = content.replace('json::value(true)', 'json::value::boolean(true)')
+        content = content.replace('json::value(false)', 'json::value::boolean(false)')
         with open(file, 'w') as f:
             f.write(content)
         EOF
         python patch_psd.py
+      shell: bash
+
+    - name: Patch WorkflowRunner.cpp for cpprest on Windows
+      if: runner.os == 'Windows'
+      run: |
+        cat <<EOF > patch_wf.py
+        import sys
+        file = 'src/orcha/workflow/WorkflowRunner.cpp'
+        with open(file, 'r') as f:
+            content = f.read()
+        if '<cpprest/asyncrt_utils.h>' not in content:
+            content = content.replace('#include <pplx/pplxtasks.h>', '#include <pplx/pplxtasks.h>\n#include <cpprest/asyncrt_utils.h>')
+        content = content.replace('std::string cmd_name = step.at(U("command")).as_string();', 'std::string cmd_name = utility::conversions::to_utf8string(step.at(U("command")).as_string());')
+        content = content.replace('json::value::string("No \'steps\' defined in YAML.")', 'json::value(U("No \'steps\' defined in YAML."))')
+        content = content.replace('json::value::string("No \'steps\' array in JSON.")', 'json::value(U("No \'steps\' array in JSON."))')
+        content = content.replace('json::value::string(results[i].error_message)', 'json::value(utility::conversions::to_string_t(results[i].error_message))')
+        content = content.replace('json::value(false)', 'json::value::boolean(false)')
+        content = content.replace('json::value(true)', 'json::value::boolean(true)')
+        with open(file, 'w') as f:
+            f.write(content)
+        EOF
+        python patch_wf.py
+      shell: bash
+
+    - name: Patch YamlToJson.hpp for cpprest on Windows
+      if: runner.os == 'Windows'
+      run: |
+        cat <<EOF > patch_yaml.py
+        import sys
+        file = 'src/orcha/utils/YamlToJson.hpp'
+        with open(file, 'r') as f:
+            content = f.read()
+        if '<cpprest/asyncrt_utils.h>' not in content:
+            content = content.replace('#include <yaml-cpp/yaml.h>', '#include <yaml-cpp/yaml.h>\n#include <cpprest/asyncrt_utils.h>')
+        content = content.replace('json::value::string(', 'json::value(utility::conversions::to_string_t(')
+        with open(file, 'w') as f:
+            f.write(content)
+        EOF
+        python patch_yaml.py
+      shell: bash
+
+    - name: Patch CommandRegistry.cpp for dlfcn on Windows
+      if: runner.os == 'Windows'
+      run: |
+        cat <<EOF > patch_cr.py
+        import sys
+        file = 'src/orcha/core/CommandRegistry.cpp'
+        with open(file, 'r') as f:
+            content = f.read()
+        content = content.replace('#include "dlfcn.h"', '#include <dlfcn.h>')
+        with open(file, 'w') as f:
+            f.write(content)
+        EOF
+        python patch_cr.py
       shell: bash
 
     - name: Configure CMake
