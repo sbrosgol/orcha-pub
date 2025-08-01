@@ -77,7 +77,22 @@ jobs:
 
     - name: Patch Logger.cpp for missing includes
       run: |
-        python -c "import sys; file = 'src/orcha/utils/Logger.cpp'; with open(file, 'r') as f: lines = f.readlines(); has_fs = any('<filesystem>' in l for l in lines); has_iom = any('<iomanip>' in l for l in lines); added = (not has_fs) or (not has_iom); if added: with open(file, 'w') as f: if not has_fs: f.write('#include <filesystem>\n'); if not has_iom: f.write('#include <iomanip>\n'); f.writelines(lines)"
+        cat <<EOF > patch_logger.py
+        import sys
+        file = 'src/orcha/utils/Logger.cpp'
+        with open(file, 'r') as f:
+            lines = f.readlines()
+        has_fs = any('<filesystem>' in l for l in lines)
+        has_iom = any('<iomanip>' in l for l in lines)
+        if not has_fs or not has_iom:
+            with open(file, 'w') as f:
+                if not has_fs:
+                    f.write('#include <filesystem>\n')
+                if not has_iom:
+                    f.write('#include <iomanip>\n')
+                f.writelines(lines)
+        EOF
+        python patch_logger.py
       shell: bash
 
     - name: Configure CMake
