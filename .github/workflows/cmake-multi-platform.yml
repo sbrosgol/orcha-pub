@@ -1,6 +1,3 @@
-# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-
 name: CMake on multiple platforms
 
 on:
@@ -73,7 +70,7 @@ jobs:
     - name: Patch vcpkg.json for libbacktrace on Windows
       if: runner.os == 'Windows'
       run: |
-        python -c "import json; with open('vcpkg.json', 'r+') as f: data = json.load(f); deps = data.get('dependencies', []); for i in range(len(deps)): dep = deps[i]; if isinstance(dep, str) and dep == 'libbacktrace': deps[i] = {'name': 'libbacktrace', 'platform': '!windows'}; elif isinstance(dep, dict) and dep.get('name') == 'libbacktrace': dep['platform'] = '!windows'; f.seek(0); json.dump(data, f, indent=4); f.truncate()"
+        python -c "import json; with open('vcpkg.json', 'r+') as f: data = json.load(f); deps = data.get('dependencies', []); for i in range(len(deps)): dep = deps[i]; if isinstance(dep, str) and dep == 'libbacktrace': deps[i] = {'name': 'libbacktrace', 'platform': '^!windows'}; elif isinstance(dep, dict) and dep.get('name') == 'libbacktrace': dep['platform'] = '^!windows'; f.seek(0); json.dump(data, f, indent=4); f.truncate()"
       shell: cmd
 
     - name: Configure CMake
