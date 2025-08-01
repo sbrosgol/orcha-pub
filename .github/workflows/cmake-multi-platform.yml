@@ -75,6 +75,20 @@ jobs:
         echo     f.truncate^() >> patch.py
         python patch.py
 
+    - name: Patch vcpkg.json for dlfcn-win32 on Windows
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        echo import json > patch_dl.py
+        echo with open^("src/orcha/vcpkg.json"^, ^"r+^"^) as f: >> patch_dl.py
+        echo     data = json.load^(f^) >> patch_dl.py
+        echo     deps = data.get^("dependencies"^, []^) >> patch_dl.py
+        echo     deps.append(^{^"name^": ^"dlfcn-win32^"^, ^"platform^": ^"windows^"^}) >> patch_dl.py
+        echo     f.seek^(0^) >> patch_dl.py
+        echo     json.dump^(data^, f^, indent=4^) >> patch_dl.py
+        echo     f.truncate^() >> patch_dl.py
+        python patch_dl.py
+
     - name: Patch Logger.cpp for missing includes
       run: |
         cat <<EOF > patch_logger.py
@@ -110,6 +124,32 @@ jobs:
                 f.writelines(lines)
         EOF
         python patch_main.py
+      shell: bash
+
+    - name: Patch PowerShellDownloader.cpp for cpprest on Windows
+      if: runner.os == 'Windows'
+      run: |
+        cat <<EOF > patch_psd.py
+        import sys
+        file = 'src/orcha/commands/PowerShellDownloader/PowerShellDownloader.cpp'
+        with open(file, 'r') as f:
+            lines = f.readlines()
+        has_utils = any('<cpprest/basic_utils.h>' in l for l in lines)
+        if not has_utils:
+            with open(file, 'w') as f:
+                f.write('#include <cpprest/basic_utils.h>\n')
+                f.writelines(lines)
+        else:
+            with open(file, 'w') as f:
+                f.writelines(lines)
+        with open(file, 'r') as f:
+            content = f.read()
+        content = content.replace('open_ostream(filename', 'open_ostream(utility::conversions::to_string_t(filename')
+        content = content.replace('value::string(', 'value::string(utility::conversions::to_string_t(')
+        with open(file, 'w') as f:
+            f.write(content)
+        EOF
+        python patch_psd.py
       shell: bash
 
     - name: Configure CMake
