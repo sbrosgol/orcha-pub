@@ -1,6 +1,5 @@
 #include "CommandRegistry.hpp"
 #include <dlfcn.h>
-#include "orcha_pch.hpp"
 
 CommandRegistry::~CommandRegistry() {
     for (auto& plugin : plugins_) {
@@ -16,7 +15,7 @@ bool CommandRegistry::load_command_library(const std::string& path) {
         return false;
     }
     dlerror();
-    auto create_func = (CreateCommandFunc)dlsym(handle, "create_command");
+    const auto create_func = (CreateCommandFunc)dlsym(handle, "create_command");
     const char* dlsym_error = dlerror();
     if (dlsym_error) {
         std::cerr << "Cannot load symbol 'create_command' in " << path << ": " << dlsym_error << std::endl;
@@ -36,6 +35,6 @@ bool CommandRegistry::load_command_library(const std::string& path) {
 }
 
 ICommand* CommandRegistry::get_command(const std::string& name) const {
-    auto it = commands_.find(name);
+    const auto it = commands_.find(name);
     return (it != commands_.end()) ? it->second : nullptr;
 }

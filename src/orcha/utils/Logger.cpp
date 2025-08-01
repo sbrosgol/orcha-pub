@@ -62,7 +62,6 @@ void Logger::logging_thread() {
                 file_ << message;
                 file_.flush(); // Optional, or batch flush for better performance
             }
-
             lock.lock();
         }
     }
