@@ -13,71 +13,71 @@ web::json::value WorkflowRunner::resolve_placeholders(const web::json::value& in
     if (input.is_string()) {
         utility::string_t s = input.as_string();
 #if defined(_WIN32)
-        static const std::wregex re(L"\\{\\{step(\\d+)\\.output(\\.[\\w\\d_]+)*\\}\\}");
-        std::wsmatch match;
-        while (std::regex_search(s, match, re)) {
-            int idx = std::stoi(match[1].str()) - 1;
-            std::wstring field_path = match[2].str();
-            std::wstring value = L"";
-            if (idx >= 0 && idx < (int)previous_results.size()) {
-                auto out = previous_results[idx].output;
-                if (!field_path.empty()) {
-                    size_t start = 1;
-                    while (start < field_path.size()) {
-                        size_t next = field_path.find(L'.', start);
-                        std::wstring key = field_path.substr(start, next - start);
-                        if (out.is_object() && out.has_field(key)) {
-                            out = out.at(key);
-                        } else {
-                            out = web::json::value::null();
-                            break;
-                        }
-                        start = (next == std::wstring::npos) ? field_path.size() : next + 1;
+    static const std::wregex re(L"\\{\\{step(\\d+)\\.output(\\.[\\w\\d_]+)*\\}\\}");
+    std::wsmatch match;
+    while (std::regex_search(s, match, re)) {
+        int idx = std::stoi(match[1].str()) - 1;
+        std::wstring field_path = match[2].str();
+        std::wstring value = L"";
+        if (idx >= 0 && idx < (int)previous_results.size()) {
+            auto out = previous_results[idx].output;
+            if (!field_path.empty()) {
+                size_t start = 1;
+                while (start < field_path.size()) {
+                    size_t next = field_path.find(L'.', start);
+                    std::wstring key = field_path.substr(start, next - start);
+                    if (out.is_object() && out.has_field(key)) {
+                        out = out.at(key);
+                    } else {
+                        out = web::json::value::null();
+                        break;
                     }
-                    if (!out.is_null()) {
-                        if (out.is_string()) value = out.as_string();
-                        else if (out.is_integer()) value = std::to_wstring(out.as_integer());
-                        else if (out.is_double()) value = std::to_wstring(out.as_double());
-                        else if (out.is_boolean()) value = out.as_bool() ? L"true" : L"false";
-                        else value = L"<non-scalar>";
-                    }
+                    start = (next == std::wstring::npos) ? field_path.size() : next + 1;
+                }
+                if (!out.is_null()) {
+                    if (out.is_string()) value = out.as_string();
+                    else if (out.is_integer()) value = std::to_wstring(out.as_integer());
+                    else if (out.is_double()) value = std::to_wstring(out.as_double());
+                    else if (out.is_boolean()) value = out.as_bool() ? L"true" : L"false";
+                    else value = L"<non-scalar>";
                 }
             }
-            s.replace(match.position(0), match.length(0), value);
         }
+        s.replace(match.position(0), match.length(0), value);
+    }
 #else
-        static const std::regex re("\\{\\{step(\\d+)\\.output(\\.[\\w\\d_]+)*\\}\\}");
-        std::smatch match;
-        while (std::regex_search(s, match, re)) {
-            int idx = std::stoi(match[1].str()) - 1;
-            std::string field_path = match[2].str();
-            std::string value;
-            if (idx >= 0 && idx < (int)previous_results.size()) {
-                auto out = previous_results[idx].output;
-                if (!field_path.empty()) {
-                    size_t start = 1;
-                    while (start < field_path.size()) {
-                        size_t next = field_path.find('.', start);
-                        std::string key = field_path.substr(start, next - start);
-                        if (out.is_object() && out.has_field(key)) {
-                            out = out.at(key);
-                        } else {
-                            out = web::json::value::null();
-                            break;
-                        }
-                        start = (next == std::string::npos) ? field_path.size() : next + 1;
+    static const std::regex re(R"(\{\{step(\d+)\.output(\.[\w\d_]+)*\}\})");
+    std::smatch match;
+    while (std::regex_search(s, match, re)) {
+        int idx = std::stoi(match[1].str()) - 1;
+        std::string field_path = match[2].str();
+        std::string value;
+        if (int prev_idx = static_cast<int>(previous_results.size()); idx >= 0 && idx < prev_idx) {
+            auto out = previous_results[idx].output;
+            if (!field_path.empty()) {
+                size_t start = 1;
+                while (start < field_path.size()) {
+                    size_t next = field_path.find('.', start);
+                    std::string key = field_path.substr(start, next - start);
+                    if (out.is_object() && out.has_field(key)) {
+                        out = out.at(key);
+                    } else {
+                        out = web::json::value::null();
+                        break;
                     }
-                    if (!out.is_null()) {
-                        if (out.is_string()) value = out.as_string();
-                        else if (out.is_integer()) value = std::to_string(out.as_integer());
-                        else if (out.is_double()) value = std::to_string(out.as_double());
-                        else if (out.is_boolean()) value = out.as_bool() ? "true" : "false";
-                        else value = "<non-scalar>";
-                    }
+                    start = (next == std::string::npos) ? field_path.size() : next + 1;
+                }
+                if (!out.is_null()) {
+                    if (out.is_string()) value = out.as_string();
+                    else if (out.is_integer()) value = std::to_string(out.as_integer());
+                    else if (out.is_double()) value = std::to_string(out.as_double());
+                    else if (out.is_boolean()) value = out.as_bool() ? "true" : "false";
+                    else value = "<non-scalar>";
                 }
             }
-            s.replace(match.position(0), match.length(0), value);
         }
+        s.replace(match.position(0), match.length(0), value);
+    }
 #endif
         return web::json::value::string(s);
     }
