@@ -10,6 +10,7 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif()
 
 find_package(Boost REQUIRED COMPONENTS thread system)
+find_package(OpenSSL REQUIRED)
 find_package(cpprestsdk REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
@@ -52,7 +53,7 @@ target_link_libraries(agent PUBLIC core workflow Boost::thread Boost::system cpp
 add_executable(orcha
         main.cpp
 )
-target_link_libraries(orcha PRIVATE agent core workflow yaml-cpp::yaml-cpp utils logger)
+target_link_libraries(orcha PRIVATE agent core workflow yaml-cpp::yaml-cpp utils logger OpenSSL::SSL OpenSSL::Crypto)
 
 target_precompile_headers(core PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 target_precompile_headers(agent PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
