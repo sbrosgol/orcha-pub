@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ..
+          cmake ../../orcha-pub/src/orcha/
           make
 
       - name: Run CodeQL analysis
