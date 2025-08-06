@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libboost1.83-dev libboost-thread1.83-dev libboost-atomic1.83-dev libboost-system1.83-dev libcpprest-dev
+          sudo apt-get install -y libboost1.83-dev libboost-thread1.83-dev libboost-atomic1.83-dev libboost-system1.83-dev libcpprest-dev libyaml-cpp-dev
 
       - name: Build project
         run: |
