@@ -2,7 +2,7 @@
 #include <cpprest/json.h>
 #include <string>
 
-class EchoCommand final : public ICommand {
+class EchoCommand final : public Orcha::Core::ICommand {
 public:
     web::json::value execute(const web::json::value& params) override {
         const auto msg = params.has_field(U("message"))
@@ -14,6 +14,6 @@ public:
     [[nodiscard]] std::string name() const override { return "echo"; }
 };
 
-extern "C" ICommand* create_command() {
+extern "C" Orcha::Core::ICommand* create_command() {
     return new EchoCommand();
 }

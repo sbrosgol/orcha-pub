@@ -5,11 +5,11 @@
 
 namespace fs = std::filesystem;
 
-auto main(int argc, char *argv[]) -> int {
+auto main(int argc, char* argv[]) -> int {
+    Orcha::Utils::Logger::instance().set_log_file("./logs2/orcha.log");
+    Orcha::Utils::Logger::instance().log(Orcha::Utils::LogLevel::INFO, "Starting Orcha...");
 
-    Logger::instance().set_log_file("./logs2/orcha.log");
-    Logger::instance().log(LogLevel::INFO, "Starting Orcha...");
-    CommandRegistry registry;
+    Orcha::Core::CommandRegistry registry;
     const std::string commands_dir = "./commands";
     const std::string ext =
 #if defined(_WIN32)
@@ -41,21 +41,21 @@ auto main(int argc, char *argv[]) -> int {
 
     // CLI workflow mode
     if (argc > 1) {
-        std::vector<WorkflowStepResult> step_results;
-        WorkflowRunner runner(registry);
+        std::vector<Orcha::Workflow::WorkflowStepResult> step_results;
+        Orcha::Workflow::WorkflowRunner runner(registry);
         if (!runner.run(argv[1], step_results)) {
             std::cout << "[Orcha] Workflow failed!\n";
         }
         for (size_t i = 0; i < step_results.size(); ++i) {
-            std::cout << "Step " << (i+1) << ": success=" << step_results[i].success
-                << " error=" << step_results[i].error_message
-                << " output=" << step_results[i].output.serialize() << std::endl;
+            std::cout << "Step " << (i + 1) << ": success=" << step_results[i].success
+                      << " error=" << step_results[i].error_message
+                      << " output=" << step_results[i].output.serialize() << std::endl;
         }
         return 0;
     }
 
     // HTTP server mode
-    CommandAgent agent(registry);
+    Orcha::Agent::CommandAgent agent(registry);
     agent.start(8070);
 
     std::cout << "[Orcha] Listening on http://localhost:8070/\n";
@@ -63,8 +63,7 @@ auto main(int argc, char *argv[]) -> int {
 
     std::cin.get();
 
-
-    Logger::instance().log(LogLevel::INFO, "Shutting down Orcha...");
+    Orcha::Utils::Logger::instance().log(Orcha::Utils::LogLevel::INFO, "Shutting down Orcha...");
     agent.stop();
     std::cout << "[Orcha] Shutdown complete.\n";
     return 0;

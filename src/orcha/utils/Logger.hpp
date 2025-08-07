@@ -2,45 +2,49 @@
 
 #include "../orcha_pch.hpp"
 
-enum class LogLevel {
-    INFO,
-    WARNING,
-    ERROR,
-    DEBUG
-};
+namespace Orcha::Utils {
 
-class Logger {
-public:
-    static Logger& instance();
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
+    enum class LogLevel {
+        INFO,
+        WARNING,
+        ERROR,
+        DEBUG
+    };
 
-    static void info(const std::string& msg)   { instance().log(LogLevel::INFO, msg); }
-    static void warn(const std::string& msg)   { instance().log(LogLevel::WARNING, msg); }
-    static void error(const std::string& msg)  { instance().log(LogLevel::ERROR, msg); }
-    static void debug(const std::string& msg)  { instance().log(LogLevel::DEBUG, msg); }
+    class Logger {
+    public:
+        static Logger& instance();
+        Logger(const Logger&) = delete;
+        Logger& operator=(const Logger&) = delete;
 
-    void set_log_file(const std::string& filename);
-    void log(LogLevel level, const std::string& msg);
-    void shutdown(); // flush + exit
+        static void info(const std::string& msg) { instance().log(LogLevel::INFO, msg); }
+        static void warn(const std::string& msg) { instance().log(LogLevel::WARNING, msg); }
+        static void error(const std::string& msg) { instance().log(LogLevel::ERROR, msg); }
+        static void debug(const std::string& msg) { instance().log(LogLevel::DEBUG, msg); }
 
-private:
-    Logger();
-    ~Logger();
+        void set_log_file(const std::string& filename);
+        void log(LogLevel level, const std::string& msg);
+        void shutdown(); // flush + exit
 
-    void logging_thread(); // Background loop
-    void enqueue(const std::string& message);
+    private:
+        Logger();
+        ~Logger();
 
-    std::mutex mtx_;
-    std::condition_variable cv_;
-    std::queue<std::string> log_queue_;
-    std::thread worker_;
-    std::atomic<bool> running_{true};
+        void logging_thread(); // Background loop
+        void enqueue(const std::string& message);
 
-    std::ofstream file_;
-    std::string log_filename_;
-    bool use_file_ = false;
+        std::mutex mtx_;
+        std::condition_variable cv_;
+        std::queue<std::string> log_queue_;
+        std::thread worker_;
+        std::atomic<bool> running_{true};
 
-    static std::string timestamp();
-    static std::string level_to_string(LogLevel level);
-};
+        std::ofstream file_;
+        std::string log_filename_;
+        bool use_file_ = false;
+
+        static std::string timestamp();
+        static std::string level_to_string(LogLevel level);
+    };
+
+} // namespace Orcha::Utils

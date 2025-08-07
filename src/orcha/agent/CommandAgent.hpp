@@ -6,15 +6,20 @@
 
 #include "Logger.hpp"
 
-class CommandAgent {
-public:
-    explicit CommandAgent(CommandRegistry& registry);
-    void start(unsigned short port);
-    void stop() const;
-private:
-    void handle_request(web::http::http_request request) const;
+namespace Orcha::Agent {
 
-    CommandRegistry& registry_;
-    WorkflowRunner runner_;
-    std::unique_ptr<web::http::experimental::listener::http_listener> listener_;
-};
+    class CommandAgent {
+    public:
+        explicit CommandAgent(Orcha::Core::CommandRegistry& registry);
+        void start(unsigned short port);
+        void stop() const;
+
+    private:
+        void handle_request(web::http::http_request request) const;
+
+        Orcha::Core::CommandRegistry& registry_;
+        Orcha::Workflow::WorkflowRunner runner_;
+        std::unique_ptr<web::http::experimental::listener::http_listener> listener_;
+    };
+
+} // namespace Orcha::Agent
