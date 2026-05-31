@@ -17,8 +17,8 @@ extern char** environ;
 
 namespace Orcha::Config {
 
-    YamlConfiguration::YamlConfiguration(YAML::Node root)
-        : root_(std::move(root)) {}
+    YamlConfiguration::YamlConfiguration(const YAML::Node& root)
+        : root_(root) {}
 
     bool YamlConfiguration::load_from_file(const std::filesystem::path& config_path) {
         try {
