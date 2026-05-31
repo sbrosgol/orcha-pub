@@ -3,8 +3,22 @@
 // Updated to use new architecture with DI and configuration
 //
 
+#include <atomic>
+#include <condition_variable>
+#include <csignal>
 #include <filesystem>
 #include <iostream>
+#include <mutex>
+#include <thread>
+#ifdef _WIN32
+#include <io.h>
+#define orcha_isatty _isatty
+#define orcha_fileno _fileno
+#else
+#include <unistd.h>
+#define orcha_isatty ::isatty
+#define orcha_fileno ::fileno
+#endif
 
 // Core
 #include "core/CommandRegistry.hpp"
@@ -257,9 +271,44 @@ int run_server_mode(Orcha::Core::ServiceLocator& services,
         std::cout << "  [scheduler] cron scheduling active (tick "
                   << scheduler_tick.count() << "s)\n";
     }
-    std::cout << "[Orcha] Press Enter to exit...\n";
+    // Wait for shutdown. In an interactive shell we accept Enter on stdin; in
+    // a detached environment (Docker `up -d`, systemd, nohup) stdin is closed
+    // and cin.get() returns EOF immediately — so we also block on SIGTERM/SIGINT
+    // and race whichever arrives first.
+    static std::condition_variable shutdown_cv;
+    static std::mutex shutdown_mtx;
+    static std::atomic<bool> shutdown_requested{false};
+    auto request_shutdown = [] {
+        {
+            std::lock_guard<std::mutex> lock(shutdown_mtx);
+            shutdown_requested = true;
+        }
+        shutdown_cv.notify_all();
+    };
+    std::signal(SIGTERM, [](int) {
+        shutdown_requested = true;
+        shutdown_cv.notify_all();
+    });
+    std::signal(SIGINT, [](int) {
+        shutdown_requested = true;
+        shutdown_cv.notify_all();
+    });
 
-    std::cin.get();
+    const bool interactive = orcha_isatty(orcha_fileno(stdin)) != 0;
+    if (interactive) {
+        std::cout << "[Orcha] Press Enter (or Ctrl-C) to exit...\n";
+        std::thread([request_shutdown] {
+            std::cin.get();
+            request_shutdown();
+        }).detach();
+    } else {
+        std::cout << "[Orcha] Running detached; send SIGTERM to exit.\n";
+    }
+
+    {
+        std::unique_lock<std::mutex> lock(shutdown_mtx);
+        shutdown_cv.wait(lock, [] { return shutdown_requested.load(); });
+    }
 
     logger->info("Shutting down Orcha...");
     if (scheduler) scheduler->stop();

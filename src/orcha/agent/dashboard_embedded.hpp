@@ -14,24 +14,38 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Orcha Admin</title>
   <script>document.documentElement.dataset.theme = localStorage.getItem('orcha_theme') || 'system';</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
   <style>
+    /* Light theme. Deep, saturated severity colors so chips read as labels on
+       a near-white panel; teal-700 as the primary accent. */
     :root {
-      --bg:#f6f8fa; --panel:#ffffff; --line:#d0d7de; --fg:#1f2328;
-      --muted:#656d76; --accent:#0969da; --on-accent:#ffffff;
-      --ok:#1a7f37; --warn:#9a6700; --err:#cf222e;
+      --bg:#f6f8fa; --panel:#ffffff; --panel-2:#f0f3f7; --line:#d0d7de; --fg:#1f2328;
+      --muted:#656d76; --accent:#0d9488; --on-accent:#ffffff;
+      --crit:#dc2626; --high:#ea580c; --med:#ca8a04; --low:#16a34a;
+      --info:#0284c7; --violet:#7c3aed; --pink:#be185d;
+      --ok:var(--low); --warn:var(--med); --err:var(--crit);
+      --grid:#e6ebf0;
       --shadow:0 1px 3px rgba(27,31,36,.12), 0 8px 24px rgba(27,31,36,.08);
     }
+    /* Dark theme — matches the dashboard reference: deeper navy bg, teal accent,
+       full severity palette (red/orange/yellow/green) + info/violet/pink. */
     :root[data-theme="dark"] {
-      --bg:#0f1419; --panel:#1a2029; --line:#2a323d; --fg:#e6edf3;
-      --muted:#8b97a5; --accent:#4493f8; --on-accent:#0b1220;
-      --ok:#3fb950; --warn:#d29922; --err:#f85149;
+      --bg:#0b0f17; --panel:#131a26; --panel-2:#1a2333; --line:#1f2a3c; --fg:#e6ecf5;
+      --muted:#8a97ac; --accent:#5eead4; --on-accent:#0b1220;
+      --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#22c55e;
+      --info:#38bdf8; --violet:#a78bfa; --pink:#f472b6;
+      --ok:var(--low); --warn:var(--med); --err:var(--crit);
+      --grid:#1f2a3c;
       --shadow:0 1px 3px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4);
     }
     @media (prefers-color-scheme: dark) {
       :root[data-theme="system"] {
-        --bg:#0f1419; --panel:#1a2029; --line:#2a323d; --fg:#e6edf3;
-        --muted:#8b97a5; --accent:#4493f8; --on-accent:#0b1220;
-        --ok:#3fb950; --warn:#d29922; --err:#f85149;
+        --bg:#0b0f17; --panel:#131a26; --panel-2:#1a2333; --line:#1f2a3c; --fg:#e6ecf5;
+        --muted:#8a97ac; --accent:#5eead4; --on-accent:#0b1220;
+        --crit:#ef4444; --high:#f97316; --med:#eab308; --low:#22c55e;
+        --info:#38bdf8; --violet:#a78bfa; --pink:#f472b6;
+        --ok:var(--low); --warn:var(--med); --err:var(--crit);
+        --grid:#1f2a3c;
         --shadow:0 1px 3px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.4);
       }
     }
@@ -63,9 +77,15 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     th { color:var(--muted); font-weight:500; font-size:12px; text-transform:uppercase; }
     tr:last-child td { border-bottom:none; }
     .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; }
-    .badge.loaded,.badge.success { background:color-mix(in srgb,var(--ok) 18%,transparent); color:var(--ok); }
-    .badge.available { background:color-mix(in srgb,var(--warn) 18%,transparent); color:var(--warn); }
-    .badge.failed { background:color-mix(in srgb,var(--err) 18%,transparent); color:var(--err); }
+    .badge.loaded,.badge.success { background:color-mix(in srgb,var(--low) 18%,transparent); color:var(--low); }
+    .badge.available { background:color-mix(in srgb,var(--info) 18%,transparent); color:var(--info); }
+    .badge.disabled { background:color-mix(in srgb,var(--muted) 22%,transparent); color:var(--muted); }
+    .badge.failed { background:color-mix(in srgb,var(--crit) 18%,transparent); color:var(--crit); }
+    .badge.kev    { background:color-mix(in srgb,var(--accent) 18%,transparent); color:var(--accent); }
+    .badge.cron   { background:color-mix(in srgb,var(--violet) 22%,transparent); color:var(--violet); }
+    .badge.manual { background:color-mix(in srgb,var(--pink) 22%,transparent); color:var(--pink); }
+    .badge.api    { background:color-mix(in srgb,var(--info) 22%,transparent); color:var(--info); }
+    .badge.schedule { background:color-mix(in srgb,var(--violet) 22%,transparent); color:var(--violet); }
     .tags span { background:var(--bg); border:1px solid var(--line); border-radius:4px;
                  padding:1px 6px; margin-right:4px; font-size:11px; color:var(--muted); }
     .actions { display:flex; gap:6px; flex-wrap:wrap; }
@@ -191,6 +211,44 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     .cron-row select, .cron-row input { width:100%; }
     .cron-preview { font-size:12px; color:var(--muted); margin-top:6px; min-height:18px; }
     .cron-preview.err { color:var(--err); }
+
+    /* ---------------- Overview dashboard ---------------- */
+    .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+            gap:12px; margin-bottom:18px; }
+    .kpi  { background:var(--panel); border:1px solid var(--line); border-radius:10px;
+            padding:14px 16px; min-height:84px;
+            display:flex; flex-direction:column; justify-content:space-between; }
+    .kpi .label { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:1px; }
+    .kpi .value { font-size:26px; font-weight:700; line-height:1.1; }
+    .kpi.crit   .value { color:var(--crit); }
+    .kpi.high   .value { color:var(--high); }
+    .kpi.med    .value { color:var(--med); }
+    .kpi.low    .value { color:var(--low); }
+    .kpi.info   .value { color:var(--info); }
+    .kpi.kev    .value { color:var(--accent); }
+    .kpi.violet .value { color:var(--violet); }
+    .kpi.pink   .value { color:var(--pink); }
+
+    .dgrid { display:grid; grid-template-columns:repeat(12,1fr); gap:16px; margin-bottom:16px; }
+    .dcard { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px; }
+    .dcard h2 { margin:0 0 12px; font-size:12px; font-weight:600;
+                color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+    .span-3  { grid-column:span 3; }
+    .span-4  { grid-column:span 4; }
+    .span-6  { grid-column:span 6; }
+    .span-8  { grid-column:span 8; }
+    .span-12 { grid-column:span 12; }
+    @media (max-width:1100px) {
+      .span-3, .span-4 { grid-column:span 6; }
+      .span-6, .span-8 { grid-column:span 12; }
+    }
+    @media (max-width:640px) {
+      .span-3, .span-4, .span-6, .span-8 { grid-column:span 12; }
+    }
+    .chart-box      { position:relative; height:220px; }
+    .chart-box-tall { position:relative; height:300px; }
+    .recent-runs td { font-size:12.5px; }
+    .recent-runs td.mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
   </style>
 </head>
 <body>
@@ -218,7 +276,8 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     <header>
       <h1>Orcha Admin</h1>
       <nav>
-        <button data-view="plugins" class="active">Plugins</button>
+        <button data-view="overview" class="active">Overview</button>
+        <button data-view="plugins">Plugins</button>
         <button data-view="jobs">Jobs</button>
       </nav>
       <span class="spacer"></span>
@@ -230,8 +289,38 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
       <button class="btn" id="logout">Sign out</button>
     </header>
     <main>
+      <!-- Overview view -->
+      <section class="view active" id="view-overview">
+        <div class="toolbar">
+          <button class="btn" id="refreshOverview">Refresh</button>
+          <span class="muted" id="overviewMeta"></span>
+        </div>
+        <section class="kpis" id="kpis"></section>
+        <section class="dgrid">
+          <div class="dcard span-3"><h2>Plugin status</h2>
+            <div class="chart-box"><canvas id="chPlugins"></canvas></div></div>
+          <div class="dcard span-3"><h2>Job status</h2>
+            <div class="chart-box"><canvas id="chJobs"></canvas></div></div>
+          <div class="dcard span-3"><h2>Run outcomes</h2>
+            <div class="chart-box"><canvas id="chOutcomes"></canvas></div></div>
+          <div class="dcard span-3"><h2>Run triggers</h2>
+            <div class="chart-box"><canvas id="chTriggers"></canvas></div></div>
+        </section>
+        <section class="dgrid">
+          <div class="dcard span-12"><h2>Runs by day (last 14 days)</h2>
+            <div class="chart-box-tall"><canvas id="chRuns"></canvas></div></div>
+        </section>
+        <section class="dgrid">
+          <div class="dcard span-12"><h2>Recent runs</h2>
+            <table class="recent-runs">
+              <thead><tr><th>When</th><th>Job</th><th>Trigger</th><th>Status</th><th>Error</th></tr></thead>
+              <tbody id="recentRuns"></tbody>
+            </table></div>
+        </section>
+      </section>
+
       <!-- Plugins view -->
-      <section class="view active" id="view-plugins">
+      <section class="view" id="view-plugins">
         <div class="toolbar">
           <button class="btn" id="refresh">Refresh</button>
           <span class="muted" id="count"></span>
@@ -355,7 +444,8 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     }
     function showLogin(msg){ document.body.classList.remove('authed'); $('loginErr').textContent=msg||'';
       $('pass').value=''; setTimeout(()=>$('user').focus(),0); }
-    function enterApp(){ document.body.classList.add('authed'); loadPlugins(); loadJobs(); }
+    function enterApp(){ document.body.classList.add('authed');
+      loadOverview(); loadPlugins(); loadJobs(); }
 
     $('loginForm').addEventListener('submit', async e => {
       e.preventDefault();
@@ -380,7 +470,197 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
       document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
       $('view-'+b.dataset.view).classList.add('active');
       if (b.dataset.view==='jobs' && flow.job) flow.resize();
+      if (b.dataset.view==='overview') loadOverview();
     }));
+
+    // ================= Overview =================
+    // Build palette from the live CSS custom properties so the charts track
+    // whatever theme is active (light/dark/system) without hardcoded hex values.
+    function tokenColor(name){
+      const v = getComputedStyle(document.documentElement).getPropertyValue('--'+name).trim();
+      return v || '#888';
+    }
+    const overview = {
+      charts: {},
+      destroy(){ for (const k in this.charts) { this.charts[k]?.destroy?.(); } this.charts = {}; },
+      configureChartDefaults(){
+        if (!window.Chart) return false;
+        Chart.defaults.color = tokenColor('muted');
+        Chart.defaults.borderColor = tokenColor('grid');
+        Chart.defaults.font.family = getComputedStyle(document.body).fontFamily || 'sans-serif';
+        Chart.defaults.responsive = true;
+        Chart.defaults.maintainAspectRatio = false;
+        return true;
+      },
+      donut(id, labels, values, colors){
+        const ctx = document.getElementById(id); if (!ctx) return;
+        this.charts[id] = new Chart(ctx, {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0 }] },
+          options: { cutout:'60%',
+                     plugins:{ legend:{ position:'bottom',
+                                        labels:{ boxWidth:10, font:{size:11} } } } }
+        });
+      },
+      line(id, labels, opened, closed){
+        const ctx = document.getElementById(id); if (!ctx) return;
+        this.charts[id] = new Chart(ctx, {
+          type: 'line',
+          data: { labels,
+            datasets: [
+              { label:'Success', data:opened,
+                borderColor:tokenColor('low'),
+                backgroundColor:'color-mix(in srgb, '+tokenColor('low')+' 18%, transparent)',
+                fill:true, tension:.3 },
+              { label:'Failed', data:closed,
+                borderColor:tokenColor('crit'),
+                backgroundColor:'color-mix(in srgb, '+tokenColor('crit')+' 14%, transparent)',
+                fill:true, tension:.3 },
+            ]
+          },
+          options: { plugins:{ legend:{ position:'bottom' } },
+                     scales:{ x:{ grid:{ display:false } },
+                              y:{ grid:{ color:tokenColor('grid') },
+                                  beginAtZero:true, ticks:{ precision:0 } } } }
+        });
+      }
+    };
+
+    function fmtNum(n){ return (n==null) ? '—' : Number(n).toLocaleString(); }
+    function fmtAgo(iso){
+      if (!iso) return '—';
+      const d = new Date(iso); if (isNaN(d)) return iso;
+      const s = (Date.now() - d.getTime()) / 1000;
+      if (s < 60)        return Math.floor(s) + 's ago';
+      if (s < 3600)      return Math.floor(s/60) + 'm ago';
+      if (s < 86400)     return Math.floor(s/3600) + 'h ago';
+      if (s < 86400*30)  return Math.floor(s/86400) + 'd ago';
+      return d.toISOString().slice(0,10);
+    }
+
+    async function loadOverview(){
+      // Fail soft: even if one of the three endpoints is missing we still
+      // render whatever sections we can.
+      let plugins = null, jobs = null, runs = null;
+      try { plugins = await api('/api/plugins'); } catch(e){ /* leave null */ }
+      try { jobs    = await api('/api/jobs');    } catch(e){}
+      try { runs    = await api('/api/runs?limit=200'); } catch(e){}
+
+      // ---- KPI tiles ----
+      const pluginList = (plugins && plugins.plugins) || [];
+      const loaded   = pluginList.filter(p=>p.status==='loaded').length;
+      const disabled = pluginList.filter(p=>p.status==='disabled').length;
+      const available= pluginList.filter(p=>p.status==='available').length;
+
+      const jobList = (jobs && jobs.jobs) || [];
+      const enabled  = jobList.filter(j=>j.enabled).length;
+      const scheduled= jobList.filter(j=>j.schedule_cron).length;
+
+      const runList = (runs && runs.runs) || [];
+      const succ = runList.filter(r=>r.status==='success').length;
+      const fail = runList.filter(r=>r.status==='failed').length;
+      const successRate = runList.length ? Math.round(100 * succ / runList.length) : null;
+
+      const kpiSpecs = [
+        { label:'Loaded plugins', value: fmtNum(loaded),    cls:'kev' },
+        { label:'Available',      value: fmtNum(available), cls:'info' },
+        { label:'Disabled',       value: fmtNum(disabled) },
+        { label:'Jobs',           value: fmtNum(jobList.length) },
+        { label:'Enabled',        value: fmtNum(enabled),   cls:'low' },
+        { label:'Scheduled',      value: fmtNum(scheduled), cls:'violet' },
+        { label:'Runs (recent)',  value: fmtNum(runList.length) },
+        { label:'Success rate',
+          value: successRate==null ? '—' : (successRate + '%'),
+          cls: successRate==null ? '' : (successRate>=90?'low':successRate>=60?'med':'crit') },
+      ];
+      $('kpis').innerHTML = kpiSpecs.map(s =>
+        `<div class="kpi ${s.cls||''}"><div class="label">${s.label}</div><div class="value">${s.value}</div></div>`
+      ).join('');
+
+      // ---- Charts ----
+      overview.destroy();
+      if (!overview.configureChartDefaults()) {
+        // Chart.js still loading; retry after the script settles.
+        setTimeout(loadOverview, 250);
+        return;
+      }
+
+      overview.donut('chPlugins',
+        ['Loaded','Available','Disabled'],
+        [loaded, available, disabled],
+        [tokenColor('low'), tokenColor('info'), tokenColor('muted')]);
+
+      overview.donut('chJobs',
+        ['Enabled','Disabled','Scheduled'],
+        [enabled, jobList.length - enabled, scheduled],
+        [tokenColor('low'), tokenColor('muted'), tokenColor('violet')]);
+
+      overview.donut('chOutcomes',
+        ['Success','Failed'],
+        [succ, fail],
+        [tokenColor('low'), tokenColor('crit')]);
+
+      // Group runs by trigger.
+      const trigCounts = {};
+      runList.forEach(r => { const t = r.trigger || 'unknown';
+                             trigCounts[t] = (trigCounts[t]||0) + 1; });
+      const trigOrder = ['manual','api','schedule','unknown'];
+      const trigLabels = trigOrder.filter(t => trigCounts[t]);
+      const trigValues = trigLabels.map(t => trigCounts[t]);
+      const trigColorMap = { manual:tokenColor('pink'), api:tokenColor('info'),
+                             schedule:tokenColor('violet'), unknown:tokenColor('muted') };
+      overview.donut('chTriggers', trigLabels, trigValues,
+                     trigLabels.map(t => trigColorMap[t] || tokenColor('muted')));
+
+      // Runs by day: bucket the last 14 calendar days (UTC).
+      const days = []; const today = new Date(); today.setUTCHours(0,0,0,0);
+      for (let i = 13; i >= 0; --i) {
+        const d = new Date(today); d.setUTCDate(d.getUTCDate() - i);
+        days.push(d.toISOString().slice(0,10));
+      }
+      const succByDay = Object.fromEntries(days.map(d => [d, 0]));
+      const failByDay = Object.fromEntries(days.map(d => [d, 0]));
+      runList.forEach(r => {
+        const key = (r.started_at || '').slice(0,10);
+        if (key in succByDay) {
+          if (r.status === 'success') succByDay[key]++;
+          else if (r.status === 'failed') failByDay[key]++;
+        }
+      });
+      overview.line('chRuns', days,
+        days.map(d => succByDay[d]),
+        days.map(d => failByDay[d]));
+
+      // ---- Recent runs table ----
+      const jobNameById = Object.fromEntries(jobList.map(j => [j.id, j.name]));
+      const recent = runList.slice(0, 10);
+      $('recentRuns').innerHTML = recent.length
+        ? recent.map(r => {
+            const jobName = r.job_id ? (jobNameById[r.job_id] || r.job_id.slice(0,8)+'…')
+                                     : '<span class="muted">ad-hoc</span>';
+            const statusCls = r.status === 'success' ? 'success'
+                            : r.status === 'failed'  ? 'failed' : '';
+            const trigCls = r.trigger || 'manual';
+            const err = r.error ? esc(r.error).slice(0,80) : '';
+            return `<tr><td class="mono">${esc(fmtAgo(r.started_at))}</td>
+              <td>${jobName}</td>
+              <td><span class="badge ${trigCls}">${esc(r.trigger||'-')}</span></td>
+              <td><span class="badge ${statusCls}">${esc(r.status||'-')}</span></td>
+              <td class="muted">${err}</td></tr>`;
+          }).join('')
+        : '<tr><td colspan="5" class="muted">No runs yet.</td></tr>';
+
+      $('overviewMeta').textContent =
+        pluginList.length + ' plugin(s) · ' + jobList.length + ' job(s) · '
+        + runList.length + ' recent run(s)';
+    }
+    $('refreshOverview').addEventListener('click', loadOverview);
+
+    // Re-render charts when the theme changes so colors track the palette.
+    document.querySelectorAll('.theme-select').forEach(sel =>
+      sel.addEventListener('change', () => {
+        if ($('view-overview').classList.contains('active')) loadOverview();
+      }));
 
     // ================= Plugins =================
     function pRow(p){

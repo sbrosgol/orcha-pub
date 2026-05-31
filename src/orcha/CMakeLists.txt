@@ -107,7 +107,11 @@ target_link_libraries(orcha PRIVATE agent config)
 target_precompile_headers(core PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 target_precompile_headers(agent PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 target_precompile_headers(workflow PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(config PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(jobs PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 target_precompile_headers(orcha PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+# `logger` deliberately doesn't link cpprestsdk; skip PCH there (it's only
+# two TUs, so the missed savings are negligible).
 
 # --- Automatically add all command plugins from /commands ---
 # Each plugin builds into ${CMAKE_BINARY_DIR}/commands/<Name>/ so its
@@ -124,6 +128,10 @@ foreach(subdir ${COMMAND_DIRS})
                 set_target_properties(${subdir} PROPERTIES
                     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/commands/${subdir}"
                     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/commands/${subdir}")
+                # Reuse the project PCH: every plugin pulls in cpprest/json via
+                # core/ICommand.hpp, which is the single biggest parse cost.
+                target_precompile_headers(${subdir} PRIVATE
+                    ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
             endif()
             if(EXISTS "${CMAKE_SOURCE_DIR}/commands/${subdir}/manifest.json")
                 configure_file(

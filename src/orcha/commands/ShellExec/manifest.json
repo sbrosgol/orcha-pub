@@ -4,7 +4,6 @@
     "description": "Executes a shell command and captures its output",
     "author": "Orcha Team",
     "tags": ["utility", "shell", "process"],
-    "entry_point": "libShellExec.dylib",
     "parameters": [
         {
             "name": "cmd",

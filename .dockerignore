@@ -1,0 +1,39 @@
+# Source trees we don't need in the build context
+.git
+.idea
+.vscode
+.claude
+
+# Build outputs
+**/build
+**/_build
+**/cmake-build-*
+**/CMakeFiles
+**/CMakeCache.txt
+**/cmake_install.cmake
+**/Testing
+
+# Compiled artefacts
+**/*.o
+**/*.a
+**/*.so
+**/*.dylib
+**/*.dll
+**/*.exe
+
+# Local data / logs
+**/logs
+**/*.log
+**/orcha-jobs.db*
+**/.pwsh_embedded
+
+# OS junk
+.DS_Store
+
+# Docker artefacts themselves
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Do NOT exclude certs/ — the Dockerfile installs any *.crt found there into
+# the build-stage CA trust store (used to pass corporate TLS interception).

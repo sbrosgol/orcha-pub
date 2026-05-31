@@ -62,3 +62,6 @@ install_manifest.txt
 # PowerShell download cache
 .pwsh_embedded/
 /.vs
+
+# Host-side corporate root CAs consumed by the Dockerfile (machine-specific).
+certs/

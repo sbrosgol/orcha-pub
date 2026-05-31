@@ -1,0 +1,40 @@
+services:
+  orcha:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: orcha:latest
+    container_name: orcha
+    ports:
+      - "${ORCHA_PORT:-8070}:8070"
+    environment:
+      # Override values from orcha.yaml. Anything matching `ORCHA_<section>_<key>`
+      # is merged into the configuration at startup (see main.cpp).
+      ORCHA_ADMIN_USERNAME: ${ORCHA_ADMIN_USERNAME:-admin}
+      ORCHA_ADMIN_PASSWORD: ${ORCHA_ADMIN_PASSWORD:-change-me}
+      ORCHA_JOBS_DB_PATH: /app/data/orcha-jobs.db
+      ORCHA_LOGGING_FILE: /app/logs/orcha.log
+    volumes:
+      - orcha-data:/app/data        # persistent SQLite job store
+      - orcha-logs:/app/logs        # log files
+      # To use a custom config, copy `src/orcha/orcha.yaml.example` next to this
+      # file as `orcha.yaml`, then uncomment the line below.
+      # - ./orcha.yaml:/app/orcha.yaml:ro
+    # The `create_pg_db` plugin connects to an existing Postgres instance — pass
+    # its host/credentials via the workflow payload, not here. To reach a Postgres
+    # running on the Docker host (not in another container), use
+    # `host.docker.internal` on Mac/Windows or `--add-host=host.docker.internal:host-gateway`
+    # on Linux.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8070/ > /dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  orcha-data:
+  orcha-logs:
