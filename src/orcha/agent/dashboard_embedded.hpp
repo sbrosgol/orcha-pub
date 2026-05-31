@@ -72,6 +72,7 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     .muted { color:var(--muted); }
     .toolbar { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
     .grid { display:grid; grid-template-columns: 320px 1fr; gap:20px; }
+    .grid > * { min-width:0; }  /* let columns shrink instead of being widened by long unbreakable content */
     .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; }
     .panel h3 { margin:0; padding:12px 14px; border-bottom:1px solid var(--line); font-size:13px;
                 text-transform:uppercase; color:var(--muted); letter-spacing:.03em; }
@@ -136,7 +137,8 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
                    background:var(--bg); border-bottom:1px solid var(--line); font-size:13px; }
     .outcard .hd .sp { flex:1; }
     .outcard pre { margin:0; padding:12px; max-height:280px; overflow:auto; font-size:12px;
-                   font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+                   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+                   white-space:pre-wrap; word-break:break-word; }
     .outcard .err { color:var(--err); padding:10px 12px; font-size:13px; }
     .outcard.flash { box-shadow:0 0 0 2px var(--accent); transition:box-shadow .2s; }
     .runrow.sel td { background:var(--bg); }
