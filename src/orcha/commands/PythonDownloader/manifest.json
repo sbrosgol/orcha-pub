@@ -10,17 +10,17 @@
             "name": "version",
             "type": "string",
             "required": false,
-            "description": "CPython version to download (e.g. 3.13.1). Defaults to a recent stable release.",
-            "default": "3.13.1",
-            "example": "3.12.7"
+            "description": "CPython version to download (e.g. 3.13.13). Defaults to a recent stable release.",
+            "default": "3.13.13",
+            "example": "3.12.13"
         },
         {
             "name": "release_tag",
             "type": "string",
             "required": false,
             "description": "python-build-standalone release tag (YYYYMMDD) used for macOS/Linux. Defaults to the release that bundles the default version. Ignored on Windows.",
-            "default": "20241016",
-            "example": "20241008"
+            "default": "20260510",
+            "example": "20260508"
         }
     ]
 }

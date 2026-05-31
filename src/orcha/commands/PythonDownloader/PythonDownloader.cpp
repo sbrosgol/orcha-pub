@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 namespace {
 
 // Default CPython version downloaded when the caller doesn't pass `version`.
-constexpr const char* kDefaultPythonVersion = "3.13.1";
+constexpr const char* kDefaultPythonVersion = "3.13.13";
 
 // python-build-standalone publishes redistributable CPython tarballs for
 // macOS/Linux under date-stamped GitHub release tags. The TAG appears in both
@@ -19,7 +19,7 @@ constexpr const char* kDefaultPythonVersion = "3.13.1";
 // kDefaultPythonVersion. To download a different version, pass `release_tag`
 // matching a release that includes it (see
 // https://github.com/astral-sh/python-build-standalone/releases).
-constexpr const char* kDefaultPbsReleaseTag = "20241016";
+constexpr const char* kDefaultPbsReleaseTag = "20260510";
 
 std::string make_download_url(const std::string& version, const std::string& release_tag) {
 #if defined(_WIN32)
