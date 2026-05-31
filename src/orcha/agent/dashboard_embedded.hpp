@@ -101,6 +101,7 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     .field { margin-bottom:14px; }
     .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
     .field input { width:100%; }
+    .field input[type="checkbox"] { width:auto; }
     .btn-primary { width:100%; background:var(--accent); color:var(--on-accent); border:none;
       padding:10px; border-radius:6px; font-size:14px; cursor:pointer; font-weight:600; margin-top:4px; }
     .login-err { color:var(--err); font-size:13px; margin-top:12px; min-height:18px; }
@@ -139,6 +140,54 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     .outcard .err { color:var(--err); padding:10px 12px; font-size:13px; }
     .outcard.flash { box-shadow:0 0 0 2px var(--accent); transition:box-shadow .2s; }
     .runrow.sel td { background:var(--bg); }
+
+    /* Editor: tabs and step builder */
+    .tabs { display:flex; gap:2px; border-bottom:1px solid var(--line); margin-bottom:10px; }
+    .tab { background:none; border:none; color:var(--muted); padding:8px 14px; cursor:pointer;
+           font-size:13px; border-bottom:2px solid transparent; margin-bottom:-1px; font-family:inherit; }
+    .tab.active { color:var(--fg); border-bottom-color:var(--accent); font-weight:600; }
+    .tab:hover { color:var(--fg); }
+    .tab-warn { background:color-mix(in srgb,var(--warn) 14%,transparent); color:var(--warn);
+                border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);
+                border-radius:6px; padding:8px 10px; font-size:12px; margin-bottom:10px; }
+    .step-card { border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+                 margin-bottom:8px; background:var(--bg); }
+    .step-card .shd { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+    .step-card .shd .lbl { font-weight:600; font-size:11px; color:var(--muted);
+                           text-transform:uppercase; letter-spacing:.03em; }
+    .step-card .shd .cmd { font-weight:600; color:var(--fg); }
+    .step-card .shd .sp { flex:1; }
+    .step-card .shd button { background:var(--panel); border:1px solid var(--line);
+                             border-radius:4px; padding:2px 7px; cursor:pointer; font-size:12px;
+                             color:var(--fg); font-family:inherit; }
+    .step-card .shd button:hover { border-color:var(--accent); }
+    .step-card .shd button:disabled { opacity:.35; cursor:not-allowed; }
+    .step-card .shd button.danger:hover { border-color:var(--err); color:var(--err); }
+    .step-card .param { display:grid; grid-template-columns:130px 1fr; gap:8px; align-items:start;
+                        margin-bottom:6px; }
+    .step-card .param .pname { font-size:12px; color:var(--muted); padding-top:8px; }
+    .step-card .param .pname .req { color:var(--err); margin-left:2px; }
+    .step-card .param input[type=text],
+    .step-card .param input[type=number] { width:100%; }
+    .step-card .param input[type=checkbox] { margin-top:10px; }
+    .kv-rows { display:flex; flex-direction:column; gap:4px; }
+    .kv-row { display:flex; gap:4px; }
+    .kv-row input { flex:1; min-width:0; }
+    .kv-row .x { background:var(--panel); border:1px solid var(--line); border-radius:4px;
+                 padding:0 8px; cursor:pointer; color:var(--muted); font-family:inherit; }
+    .kv-row .x:hover { color:var(--err); border-color:var(--err); }
+    .kv-add { background:none; border:1px dashed var(--line); border-radius:4px;
+              padding:4px 8px; cursor:pointer; color:var(--muted); font-size:12px;
+              align-self:flex-start; font-family:inherit; }
+    .kv-add:hover { color:var(--accent); border-color:var(--accent); }
+    .builder-add { display:flex; gap:8px; align-items:center; margin-top:8px; }
+    .builder-add select { flex:1; }
+    .empty-hint { color:var(--muted); font-size:13px; padding:10px 12px;
+                  border:1px dashed var(--line); border-radius:8px; margin-bottom:8px; }
+    .cron-row { display:grid; grid-template-columns:200px 1fr; gap:8px; align-items:center; }
+    .cron-row select, .cron-row input { width:100%; }
+    .cron-preview { font-size:12px; color:var(--muted); margin-top:6px; min-height:18px; }
+    .cron-preview.err { color:var(--err); }
   </style>
 </head>
 <body>
@@ -216,11 +265,39 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
         <div class="field"><label>Name</label><input id="jName" type="text" style="width:100%" /></div>
         <div class="field"><label>Description</label><input id="jDesc" type="text" style="width:100%" /></div>
         <div class="field"><label>Schedule (cron, optional &mdash; "m h dom mon dow")</label>
-          <input id="jSchedule" type="text" placeholder="e.g. 0 9 * * 1-5  (blank = manual only)" style="width:100%" /></div>
+          <div class="cron-row">
+            <select id="cronPreset">
+              <option value="">Custom / none</option>
+              <option value="0 * * * *">Hourly (top of hour)</option>
+              <option value="0 */6 * * *">Every 6 hours</option>
+              <option value="0 9 * * *">Daily at 09:00</option>
+              <option value="0 9 * * 1-5">Weekdays at 09:00</option>
+              <option value="0 9 * * 1">Weekly (Mon 09:00)</option>
+              <option value="0 0 1 * *">Monthly (1st 00:00)</option>
+            </select>
+            <input id="jSchedule" type="text" placeholder='e.g. 0 9 * * 1-5  (blank = manual only)' />
+          </div>
+          <div id="cronPreview" class="cron-preview"></div>
+        </div>
         <div class="field"><label style="display:flex; align-items:center; gap:8px; color:var(--fg)">
           <input id="jEnabled" type="checkbox" /> Enabled (the scheduler runs this job when due)</label></div>
-        <div class="field"><label>Definition (JSON with a "steps" array)</label>
-          <textarea id="jDef" spellcheck="false"></textarea></div>
+        <div class="field"><label>Definition</label>
+          <div class="tabs">
+            <button class="tab active" type="button" data-deftab="visual">Visual</button>
+            <button class="tab" type="button" data-deftab="json">JSON</button>
+          </div>
+          <div id="defWarn" class="tab-warn" style="display:none"></div>
+          <div id="defVisual">
+            <div id="defSteps"></div>
+            <div class="builder-add">
+              <select id="addStepCmd"><option value="">— pick a command —</option></select>
+              <button type="button" class="btn" id="addStepBtn">+ Add step</button>
+            </div>
+          </div>
+          <div id="defJson" style="display:none">
+            <textarea id="jDef" spellcheck="false"></textarea>
+          </div>
+        </div>
         <div class="login-err" id="modalErr"></div>
       </div>
       <div class="ft">
@@ -482,23 +559,350 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
 
     // ---------- Editor modal ----------
     let editingId=null;
+    let manifests=null;       // { [command_name]: pluginMeta }
+    let allCommands=[];        // string[] of all registered commands
+    let editorVisual=[];       // [{command, name?, params}]
+    let editorTab='visual';
     const DEFAULT_DEF = JSON.stringify({steps:[
       {name:"greet", command:"echo", params:{message:"Hello from Orcha"}},
       {name:"repeat", command:"echo", params:{message:"greet said: {{steps.greet.output.echoed}}"}}
     ]}, null, 2);
-    function openEditor(job){
+
+    async function loadManifests(){
+      if(manifests) return;
+      const d = await api('/api/plugins');
+      manifests = {};
+      (d.plugins||[]).forEach(p=>{ if(p.name) manifests[p.name]=p; });
+      allCommands = (d.commands||[]).slice().sort();
+      // Populate the add-step dropdown.
+      const sel = $('addStepCmd');
+      sel.innerHTML = '<option value="">— pick a command —</option>' +
+        allCommands.map(c=>{
+          const m=manifests[c];
+          if(m) return `<option value="${esc(c)}">${esc(c)}${m.description?(' — '+esc(m.description)):''}</option>`;
+          return `<option value="${esc(c)}" disabled>${esc(c)} (no manifest — use JSON tab)</option>`;
+        }).join('');
+    }
+
+    // Manifest helpers -------------------------------------------------------
+    function paramSpec(cmd, pname){
+      const m=manifests && manifests[cmd];
+      if(!m || !m.parameters) return null;
+      return m.parameters.find(p=>p.name===pname) || null;
+    }
+    function paramDefault(p){
+      // Manifest "default" is always a string; coerce by declared type.
+      if(p.default===undefined || p.default===null) {
+        if(p.type==='bool') return false;
+        if(p.type==='int') return '';
+        if(p.type==='object') return {};
+        return '';
+      }
+      if(p.type==='bool') return String(p.default).toLowerCase()==='true';
+      if(p.type==='int'){ const n=parseInt(p.default,10); return isNaN(n)?'':n; }
+      if(p.type==='object'){ try { return JSON.parse(p.default); } catch(e){ return {}; } }
+      return p.default;
+    }
+    function defaultParamsFor(cmd){
+      const m=manifests && manifests[cmd]; const out={};
+      if(!m || !m.parameters) return out;
+      m.parameters.forEach(p=>{ if(p.required || p.default!==undefined) out[p.name]=paramDefault(p); });
+      return out;
+    }
+
+    // Visual <-> JSON sync ---------------------------------------------------
+    function visualToJson(){
+      const steps = editorVisual.map(s=>{
+        const o={};
+        if(s.name) o.name=s.name;
+        o.command=s.command;
+        o.params=s.params||{};
+        return o;
+      });
+      $('jDef').value = JSON.stringify({steps}, null, 2);
+    }
+    function jsonToVisual(){
+      const raw=$('jDef').value.trim();
+      if(!raw){ editorVisual=[]; return {ok:true}; }
+      let parsed;
+      try { parsed=JSON.parse(raw); } catch(e){ return {ok:false, err:'Invalid JSON: '+e.message}; }
+      if(!parsed || !Array.isArray(parsed.steps)) return {ok:false, err:'Expected an object with a "steps" array.'};
+      editorVisual = parsed.steps.map(s=>({
+        name: s.name || '',
+        command: s.command || '',
+        params: (s.params && typeof s.params==='object' && !Array.isArray(s.params)) ? s.params : {}
+      }));
+      return {ok:true};
+    }
+
+    // Renderers --------------------------------------------------------------
+    function renderVisual(){
+      const host=$('defSteps');
+      if(!editorVisual.length){
+        host.innerHTML = '<div class="empty-hint">No steps yet. Pick a command below and click <em>+ Add step</em> — or switch to the JSON tab.</div>';
+        return;
+      }
+      host.innerHTML = editorVisual.map((s,i)=>renderStepCard(s,i)).join('');
+    }
+    function renderStepCard(s, i){
+      const m = manifests && manifests[s.command];
+      const cmdLabel = esc(s.command || '(no command)') + (m ? '' : ' <span class="muted" title="No manifest for this command">(raw)</span>');
+      const params = m && m.parameters ? m.parameters.map(p=>renderParamField(i, p, s.params[p.name])).join('') : renderRawParams(i, s.params);
+      return `<div class="step-card" data-step="${i}">
+        <div class="shd">
+          <span class="lbl">Step ${i+1}</span>
+          <span class="cmd">· ${cmdLabel}</span>
+          <span class="sp"></span>
+          <button type="button" data-act="up"   data-i="${i}" ${i===0?'disabled':''} title="Move up">↑</button>
+          <button type="button" data-act="down" data-i="${i}" ${i===editorVisual.length-1?'disabled':''} title="Move down">↓</button>
+          <button type="button" class="danger" data-act="del" data-i="${i}" title="Remove">🗑</button>
+        </div>
+        <div class="param">
+          <div class="pname">name <span class="muted" title="Used for {{steps.NAME.output...}} references">(optional)</span></div>
+          <div><input type="text" data-bind="name" data-i="${i}" value="${esc(s.name||'')}" placeholder="e.g. greet" /></div>
+        </div>
+        ${params}
+      </div>`;
+    }
+    function renderParamField(i, p, value){
+      const req = p.required ? ' <span class="req">*</span>' : '';
+      const title = p.description ? ` title="${esc(p.description)}"` : '';
+      const label = `<div class="pname"${title}>${esc(p.name)}${req}</div>`;
+      let ctrl='';
+      const v = (value===undefined) ? paramDefault(p) : value;
+      if(p.type==='bool'){
+        ctrl = `<div><input type="checkbox" data-bind="param" data-pname="${esc(p.name)}" data-ptype="bool" data-i="${i}" ${v?'checked':''} /></div>`;
+      } else if(p.type==='int'){
+        ctrl = `<div><input type="number" data-bind="param" data-pname="${esc(p.name)}" data-ptype="int" data-i="${i}" value="${v===''?'':esc(String(v))}" placeholder="${esc(p.example||'')}" /></div>`;
+      } else if(p.type==='object'){
+        ctrl = `<div>${renderObjectRows(i, p.name, (v && typeof v==='object') ? v : {})}</div>`;
+      } else { // string (default)
+        ctrl = `<div><input type="text" data-bind="param" data-pname="${esc(p.name)}" data-ptype="string" data-i="${i}" value="${esc(v==null?'':String(v))}" placeholder="${esc(p.example||'')}" /></div>`;
+      }
+      return `<div class="param">${label}${ctrl}</div>`;
+    }
+    function renderObjectRows(i, pname, obj){
+      const entries=Object.entries(obj||{});
+      const rows = entries.map(([k,val],ri)=>`
+        <div class="kv-row" data-ri="${ri}">
+          <input type="text" data-bind="kvk" data-i="${i}" data-pname="${esc(pname)}" data-ri="${ri}" value="${esc(k)}" placeholder="header" />
+          <input type="text" data-bind="kvv" data-i="${i}" data-pname="${esc(pname)}" data-ri="${ri}" value="${esc(val==null?'':String(val))}" placeholder="value" />
+          <button type="button" class="x" data-act="kvdel" data-i="${i}" data-pname="${esc(pname)}" data-ri="${ri}" title="Remove">×</button>
+        </div>`).join('');
+      return `<div class="kv-rows">${rows}
+        <button type="button" class="kv-add" data-act="kvadd" data-i="${i}" data-pname="${esc(pname)}">+ Add</button></div>`;
+    }
+    function renderRawParams(i, params){
+      // Unknown command: render a single raw-JSON textarea for params.
+      const txt = JSON.stringify(params||{}, null, 2);
+      return `<div class="param">
+        <div class="pname">params <span class="muted">(JSON)</span></div>
+        <div><textarea data-bind="rawparams" data-i="${i}" style="width:100%;min-height:80px" spellcheck="false">${esc(txt)}</textarea></div>
+      </div>`;
+    }
+
+    // Visual-tab event handling ---------------------------------------------
+    function rerenderAndSync(){ renderVisual(); visualToJson(); }
+    $('defSteps').addEventListener('input', ev=>{
+      const t=ev.target;
+      const i=parseInt(t.dataset.i,10);
+      if(isNaN(i) || !editorVisual[i]) return;
+      const bind=t.dataset.bind;
+      if(bind==='name'){ editorVisual[i].name = t.value; }
+      else if(bind==='param'){
+        const pname=t.dataset.pname, ptype=t.dataset.ptype;
+        if(ptype==='bool') editorVisual[i].params[pname] = t.checked;
+        else if(ptype==='int'){ const n=parseInt(t.value,10); editorVisual[i].params[pname] = isNaN(n) ? '' : n; }
+        else editorVisual[i].params[pname] = t.value;
+      } else if(bind==='kvk' || bind==='kvv'){
+        const pname=t.dataset.pname, ri=parseInt(t.dataset.ri,10);
+        const obj=editorVisual[i].params[pname] || (editorVisual[i].params[pname]={});
+        const entries=Object.entries(obj);
+        // ri may exceed entries length when adding; just rebuild from DOM.
+        const card=t.closest('.step-card');
+        const rows=card.querySelectorAll(`.kv-row`);
+        const next={};
+        rows.forEach((row,idx)=>{
+          const k=row.querySelector(`input[data-bind="kvk"]`).value;
+          const v=row.querySelector(`input[data-bind="kvv"]`).value;
+          if(k!=='') next[k]=v;
+        });
+        editorVisual[i].params[pname]=next;
+      } else if(bind==='rawparams'){
+        try { editorVisual[i].params = JSON.parse(t.value || '{}'); } catch(e){ /* keep typing */ }
+      }
+      visualToJson();
+    });
+    $('defSteps').addEventListener('click', ev=>{
+      const b=ev.target.closest('button[data-act]'); if(!b) return;
+      const i=parseInt(b.dataset.i,10); if(isNaN(i)) return;
+      const act=b.dataset.act;
+      if(act==='up' && i>0){ const t=editorVisual[i-1]; editorVisual[i-1]=editorVisual[i]; editorVisual[i]=t; rerenderAndSync(); }
+      else if(act==='down' && i<editorVisual.length-1){ const t=editorVisual[i+1]; editorVisual[i+1]=editorVisual[i]; editorVisual[i]=t; rerenderAndSync(); }
+      else if(act==='del'){ editorVisual.splice(i,1); rerenderAndSync(); }
+      else if(act==='kvadd'){
+        const pname=b.dataset.pname;
+        const obj=editorVisual[i].params[pname] || (editorVisual[i].params[pname]={});
+        // Append a fresh empty key under a placeholder name so the row renders.
+        let key='', n=1; while((''+(n)) in obj){ n++; } key=''+n;
+        // Use empty string key — but objects can't have duplicate empty keys.
+        // Render a temp row by storing under a unique non-empty key, then user edits.
+        obj['']=obj['']!==undefined?obj['']:'';
+        rerenderAndSync();
+      }
+      else if(act==='kvdel'){
+        const pname=b.dataset.pname, ri=parseInt(b.dataset.ri,10);
+        const obj=editorVisual[i].params[pname]||{};
+        const keys=Object.keys(obj);
+        if(ri>=0 && ri<keys.length){ delete obj[keys[ri]]; rerenderAndSync(); }
+      }
+    });
+    $('addStepBtn').addEventListener('click', ()=>{
+      const cmd=$('addStepCmd').value;
+      if(!cmd){ toast('Pick a command first','err'); return; }
+      editorVisual.push({ name:'', command:cmd, params:defaultParamsFor(cmd) });
+      $('addStepCmd').value='';
+      rerenderAndSync();
+    });
+
+    // Tab switching ----------------------------------------------------------
+    function setDefTab(name){
+      if(name==='visual'){
+        const r = jsonToVisual();
+        if(!r.ok){
+          $('defWarn').textContent = "Can't switch to Visual: "+r.err+" — fix the JSON or stay on this tab.";
+          $('defWarn').style.display='block';
+          return; // stay on JSON
+        }
+        $('defWarn').style.display='none';
+        renderVisual();
+      } else {
+        // Switching to JSON: ensure JSON is current (visual is source while on visual).
+        visualToJson();
+        $('defWarn').style.display='none';
+      }
+      editorTab = name;
+      $('defVisual').style.display = (name==='visual') ? '' : 'none';
+      $('defJson').style.display   = (name==='json')   ? '' : 'none';
+      document.querySelectorAll('.tab[data-deftab]').forEach(t=>{
+        t.classList.toggle('active', t.dataset.deftab===name);
+      });
+    }
+    document.querySelectorAll('.tab[data-deftab]').forEach(t=>{
+      t.addEventListener('click', ()=>setDefTab(t.dataset.deftab));
+    });
+
+    // Cron helpers -----------------------------------------------------------
+    function cronField(spec, lo, hi){
+      const set=new Set(); const wildcard = (spec==='*');
+      spec.split(',').forEach(part=>{
+        let step=1, range=part;
+        const slash=part.indexOf('/');
+        if(slash>=0){ step=parseInt(part.slice(slash+1),10); range=part.slice(0,slash); }
+        let a, b;
+        if(range==='*'){ a=lo; b=hi; }
+        else if(range.includes('-')){ const [x,y]=range.split('-'); a=parseInt(x,10); b=parseInt(y,10); }
+        else { a=b=parseInt(range,10); }
+        if(isNaN(a)||isNaN(b)||isNaN(step)||step<=0) throw new Error('bad field: '+spec);
+        for(let v=a; v<=b; v+=step) if(v>=lo && v<=hi) set.add(v);
+      });
+      if(lo===0 && hi===6 && set.has(7)){ set.delete(7); set.add(0); } // dow: 7→0
+      return {set, wildcard};
+    }
+    function cronParse(expr){
+      const parts=expr.trim().split(/\s+/);
+      if(parts.length!==5) throw new Error('Expected 5 fields (m h dom mon dow)');
+      const ranges=[[0,59],[0,23],[1,31],[1,12],[0,6]];
+      return parts.map((p,i)=>cronField(p, ranges[i][0], ranges[i][1]));
+    }
+    function cronNext(expr, n){
+      const [m,h,dom,mon,dow]=cronParse(expr);
+      const out=[]; const d=new Date();
+      d.setSeconds(0,0); d.setMinutes(d.getMinutes()+1);
+      const limit = 366*24*60;
+      for(let i=0; i<limit && out.length<n; i++){
+        const dayOK = (!dom.wildcard && !dow.wildcard)
+          ? (dom.set.has(d.getDate()) || dow.set.has(d.getDay()))
+          : (!dom.wildcard ? dom.set.has(d.getDate())
+             : (!dow.wildcard ? dow.set.has(d.getDay()) : true));
+        if(m.set.has(d.getMinutes()) && h.set.has(d.getHours()) &&
+           mon.set.has(d.getMonth()+1) && dayOK){
+          out.push(new Date(d));
+        }
+        d.setMinutes(d.getMinutes()+1);
+      }
+      return out;
+    }
+    function cronFmt(d){
+      const p=n=>String(n).padStart(2,'0');
+      return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+    }
+    function updateCronPreview(){
+      const el=$('cronPreview'); const expr=$('jSchedule').value.trim();
+      if(!expr){ el.className='cron-preview'; el.textContent='Manual only (no schedule).'; return; }
+      try {
+        const runs=cronNext(expr, 3);
+        if(!runs.length){ el.className='cron-preview err'; el.textContent='No upcoming runs within a year.'; return; }
+        el.className='cron-preview';
+        el.textContent = 'Next: ' + runs.map(cronFmt).join(' · ');
+      } catch(e){
+        el.className='cron-preview err'; el.textContent='Invalid cron: '+e.message;
+      }
+    }
+    let cronDeb=null;
+    $('jSchedule').addEventListener('input', ()=>{
+      clearTimeout(cronDeb); cronDeb=setTimeout(updateCronPreview, 150);
+      // Update preset dropdown if expr happens to match a preset.
+      const v=$('jSchedule').value.trim();
+      const opt=Array.from($('cronPreset').options).find(o=>o.value===v);
+      $('cronPreset').value = opt ? v : '';
+    });
+    $('cronPreset').addEventListener('change', e=>{
+      $('jSchedule').value = e.target.value;
+      updateCronPreview();
+    });
+
+    // Open / save -----------------------------------------------------------
+    async function openEditor(job){
       editingId = job ? job.id : null;
       $('modalTitle').textContent = job ? 'Edit job' : 'New job';
       $('jName').value = job ? job.name : '';
       $('jDesc').value = job ? (job.description||'') : '';
       $('jSchedule').value = (job && job.schedule_cron) ? job.schedule_cron : '';
+      $('cronPreset').value = ''; // sync may not be exact; user can repick
       $('jEnabled').checked = job ? !!job.enabled : true;
       $('jDef').value  = job ? JSON.stringify(job.definition, null, 2) : DEFAULT_DEF;
       $('modalErr').textContent='';
+      $('defWarn').style.display='none';
       $('modal').classList.add('show');
+      updateCronPreview();
+
+      // Load manifests, then try to populate visual. On parse failure, go to JSON tab.
+      try { await loadManifests(); }
+      catch(e){ if(e.message!=='Unauthorized') toast('Failed to load command list: '+e.message,'err'); }
+
+      const r = jsonToVisual();
+      if(r.ok){
+        editorTab='visual';
+        $('defVisual').style.display=''; $('defJson').style.display='none';
+        document.querySelectorAll('.tab[data-deftab]').forEach(t=>{
+          t.classList.toggle('active', t.dataset.deftab==='visual');
+        });
+        renderVisual();
+      } else {
+        editorTab='json';
+        $('defVisual').style.display='none'; $('defJson').style.display='';
+        document.querySelectorAll('.tab[data-deftab]').forEach(t=>{
+          t.classList.toggle('active', t.dataset.deftab==='json');
+        });
+        $('defWarn').textContent = "Couldn't parse this definition into the Visual builder: "+r.err+" — edit JSON directly, or fix and switch to Visual.";
+        $('defWarn').style.display='block';
+      }
     }
     $('modalCancel').addEventListener('click', ()=>$('modal').classList.remove('show'));
     $('modalSave').addEventListener('click', async ()=>{
+      // If we're on Visual, ensure JSON reflects the current visual state.
+      if(editorTab==='visual') visualToJson();
       let def;
       try { def=JSON.parse($('jDef').value); }
       catch(e){ $('modalErr').textContent='Definition is not valid JSON: '+e.message; return; }
