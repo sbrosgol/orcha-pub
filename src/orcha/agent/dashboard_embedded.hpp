@@ -101,6 +101,7 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     .field { margin-bottom:14px; }
     .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
     .field input { width:100%; }
+    .field input[type="checkbox"] { width:auto; }
     .btn-primary { width:100%; background:var(--accent); color:var(--on-accent); border:none;
       padding:10px; border-radius:6px; font-size:14px; cursor:pointer; font-weight:600; margin-top:4px; }
     .login-err { color:var(--err); font-size:13px; margin-top:12px; min-height:18px; }
