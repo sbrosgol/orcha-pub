@@ -1,0 +1,9 @@
+{
+    "name": "download_pwsh",
+    "version": "2.0.0",
+    "description": "Downloads and extracts PowerShell Core for the current OS/architecture",
+    "author": "Orcha Team",
+    "tags": ["powershell", "download", "utility"],
+    "entry_point": "libPowerShellDownloader.dylib",
+    "parameters": []
+}
