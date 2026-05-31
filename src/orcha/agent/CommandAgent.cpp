@@ -152,6 +152,23 @@ namespace Orcha::Agent {
     }
 
     void CommandAgent::handle_request(http_request request) {
+        // Defend against requests like `GET //admin HTTP/1.1` — cpprest parses
+        // the leading `//` as the URI authority introducer (RFC 3986), so the
+        // first path segment ends up in `request_uri().host()` and the real
+        // path is truncated. Detect this and rewrite the request URI with the
+        // leading slashes collapsed before anything else inspects the path.
+        {
+            const auto raw = utility::conversions::to_utf8string(
+                request.request_uri().to_string());
+            if (raw.size() >= 2 && raw[0] == '/' && raw[1] == '/') {
+                size_t i = 0;
+                while (i < raw.size() && raw[i] == '/') ++i;
+                const std::string fixed = "/" + raw.substr(i);
+                request.set_request_uri(
+                    web::uri(utility::conversions::to_string_t(fixed)));
+            }
+        }
+
         auto path = request.request_uri().path();
         auto method = request.method();
 

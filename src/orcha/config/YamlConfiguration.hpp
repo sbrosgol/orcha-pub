@@ -83,7 +83,7 @@ namespace Orcha::Config {
 
     public:
         // Used internally for get_section - consider this internal API
-        explicit YamlConfiguration(YAML::Node root);
+        explicit YamlConfiguration(const YAML::Node& root);
 
     private:
 

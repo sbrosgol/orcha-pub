@@ -31,3 +31,58 @@ vcpkg install boost-thread boost-system cpprestsdk yaml-cpp
 mkdir build && cd build
 cmake ..
 make
+```
+
+### 2. Run with Docker (recommended)
+
+A multi-stage `Dockerfile` and `docker-compose.yml` are provided at the repo root.
+The compose stack runs only Orcha — the `create_pg_db` plugin is designed to
+connect to an *existing* Postgres instance (host, network-reachable, or a
+container in another compose stack). Pass the host/credentials in the workflow
+payload at runtime. From inside the container, the host machine is reachable
+at `host.docker.internal`.
+
+```bash
+# from the repo root
+docker compose build
+docker compose up -d
+
+# tail logs
+docker compose logs -f orcha
+```
+
+The agent is now reachable on `http://localhost:8070/`. To override admin
+credentials or the exposed port, set them in the environment or in a
+`.env` file beside `docker-compose.yml`:
+
+```bash
+ORCHA_ADMIN_PASSWORD=super-secret
+ORCHA_PORT=8080
+```
+
+To use a custom `orcha.yaml`, copy the example next to the compose file and
+uncomment the bind mount in `docker-compose.yml`:
+
+```bash
+cp src/orcha/orcha.yaml.example orcha.yaml
+```
+
+---
+
+## API Documentation (Swagger / OpenAPI)
+
+Once Orcha is running, the agent serves an interactive API explorer and a
+machine-readable spec:
+
+| URL | What it serves |
+|---|---|
+| `GET /swagger`        | Swagger UI (interactive) |
+| `GET /swagger.json`   | OpenAPI 3.0.3 specification |
+| `GET /sample`         | A minimal `POST /workflow` payload |
+| `GET /commands`       | Loaded command plugins and their parameters |
+
+The spec covers every public route (`/`, `/workflow`, `/commands`, `/sample`)
+plus the admin surface under `/api/*` (jobs, run history, plugin lifecycle).
+Admin endpoints are gated by HTTP Basic auth — credentials come from
+`admin.username` / `admin.password` in `orcha.yaml` (or
+`ORCHA_ADMIN_USERNAME` / `ORCHA_ADMIN_PASSWORD`).

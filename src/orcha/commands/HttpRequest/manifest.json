@@ -4,7 +4,6 @@
     "description": "Performs an HTTP request and returns the response",
     "author": "Orcha Team",
     "tags": ["http", "network", "utility"],
-    "entry_point": "libHttpRequest.dylib",
     "parameters": [
         {
             "name": "url",

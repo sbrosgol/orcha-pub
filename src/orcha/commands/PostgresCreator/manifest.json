@@ -4,7 +4,6 @@
     "description": "Creates a PostgreSQL database using psql CLI",
     "author": "Orcha Team",
     "tags": ["database", "postgres", "infrastructure"],
-    "entry_point": "libPostgresCreator.dylib",
     "parameters": [
         {
             "name": "dbname",

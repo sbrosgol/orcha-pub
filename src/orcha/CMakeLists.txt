@@ -107,9 +107,16 @@ target_link_libraries(orcha PRIVATE agent config)
 target_precompile_headers(core PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 target_precompile_headers(agent PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 target_precompile_headers(workflow PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(config PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+target_precompile_headers(jobs PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
 target_precompile_headers(orcha PRIVATE ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+# `logger` deliberately doesn't link cpprestsdk; skip PCH there (it's only
+# two TUs, so the missed savings are negligible).
 
 # --- Automatically add all command plugins from /commands ---
+# Each plugin builds into ${CMAKE_BINARY_DIR}/commands/<Name>/ so its
+# manifest.json sits beside the shared library (the plugin discovery
+# matches them by directory).
 file(GLOB COMMAND_DIRS RELATIVE "${CMAKE_SOURCE_DIR}/commands" "${CMAKE_SOURCE_DIR}/commands/*")
 
 foreach(subdir ${COMMAND_DIRS})
@@ -117,6 +124,21 @@ foreach(subdir ${COMMAND_DIRS})
         if(EXISTS "${CMAKE_SOURCE_DIR}/commands/${subdir}/CMakeLists.txt")
             add_subdirectory(commands/${subdir})
             message(STATUS "Added command plugin: ${subdir}")
+            if(TARGET ${subdir})
+                set_target_properties(${subdir} PROPERTIES
+                    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/commands/${subdir}"
+                    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/commands/${subdir}")
+                # Reuse the project PCH: every plugin pulls in cpprest/json via
+                # core/ICommand.hpp, which is the single biggest parse cost.
+                target_precompile_headers(${subdir} PRIVATE
+                    ${CMAKE_SOURCE_DIR}/orcha_pch.hpp)
+            endif()
+            if(EXISTS "${CMAKE_SOURCE_DIR}/commands/${subdir}/manifest.json")
+                configure_file(
+                    "${CMAKE_SOURCE_DIR}/commands/${subdir}/manifest.json"
+                    "${CMAKE_BINARY_DIR}/commands/${subdir}/manifest.json"
+                    COPYONLY)
+            endif()
         endif()
     endif()
 endforeach()

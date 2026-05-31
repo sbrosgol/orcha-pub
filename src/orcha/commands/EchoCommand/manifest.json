@@ -4,7 +4,6 @@
     "description": "Echoes back the input message",
     "author": "Orcha Team",
     "tags": ["utility", "debug"],
-    "entry_point": "libEchoCommand.dylib",
     "parameters": [
         {
             "name": "message",
