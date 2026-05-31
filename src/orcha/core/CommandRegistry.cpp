@@ -58,6 +58,10 @@ namespace Orcha::Core {
                 if (logger_) {
                     logger_->error("Command '" + cmd_name + "' already registered, skipping.");
                 }
+                // Drop the duplicate command BEFORE dlclose so its destructor
+                // runs while the library is still mapped (use-after-dlclose
+                // is UB and triggers SIGSEGV in optimised builds).
+                cmd.reset();
                 dlclose(handle);
                 return false;
             }
