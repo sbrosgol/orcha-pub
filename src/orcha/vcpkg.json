@@ -22,6 +22,10 @@
     {
       "name": "sqlite3",
       "version>=": "3.43.2"
+    },
+    {
+      "name": "libpqxx",
+      "version>=": "7.10.0"
     }
   ]
 }
