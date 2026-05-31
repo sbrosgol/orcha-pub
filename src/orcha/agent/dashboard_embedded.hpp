@@ -181,7 +181,8 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
               align-self:flex-start; font-family:inherit; }
     .kv-add:hover { color:var(--accent); border-color:var(--accent); }
     .builder-add { display:flex; gap:8px; align-items:center; margin-top:8px; }
-    .builder-add select { flex:1; }
+    .builder-add select { flex:1 1 0; min-width:0; }
+    .builder-add button { flex:0 0 auto; white-space:nowrap; }
     .empty-hint { color:var(--muted); font-size:13px; padding:10px 12px;
                   border:1px dashed var(--line); border-radius:8px; margin-bottom:8px; }
     .cron-row { display:grid; grid-template-columns:200px 1fr; gap:8px; align-items:center; }
