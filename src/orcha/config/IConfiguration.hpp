@@ -9,7 +9,6 @@
 #include <optional>
 #include <vector>
 #include <memory>
-#include <cstdint>
 
 namespace Orcha::Config {
 
