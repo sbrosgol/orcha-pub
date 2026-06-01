@@ -35,7 +35,7 @@ std::string make_download_url(const std::string& version, const std::string& rel
 #else
 #  if defined(__APPLE__)
 #    if defined(__arm64__)
-    const std::string triple = "aarch64-apple-darwin";
+    constexpr std::string triple = "aarch64-apple-darwin";
 #    else
     const std::string triple = "x86_64-apple-darwin";
 #    endif

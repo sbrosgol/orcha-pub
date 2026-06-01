@@ -62,10 +62,12 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     .spacer { flex:1; }
     main { padding:24px; max-width:1180px; margin:0 auto; }
     button.btn { background:var(--panel); color:var(--fg); border:1px solid var(--line);
-                 border-radius:6px; padding:6px 12px; cursor:pointer; font-size:13px; }
+                 border-radius:6px; padding:6px 12px; cursor:pointer; font-size:13px;
+                 display:inline-flex; align-items:center; gap:6px; font-family:inherit; }
     button.btn:hover { border-color:var(--accent); }
     button.btn.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
     button.btn.danger:hover { border-color:var(--err); color:var(--err); }
+    button.btn svg { width:14px; height:14px; flex:none; }
     select, input[type=text], input[type=password], textarea {
       background:var(--bg); color:var(--fg); border:1px solid var(--line);
       border-radius:6px; padding:8px 10px; font-size:13px; font-family:inherit; }
@@ -106,8 +108,15 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
              box-shadow:var(--shadow); z-index:80; }
     #toast.err { border-color:var(--err); color:var(--err); }
     #toast.ok { border-color:var(--ok); color:var(--ok); }
-    .theme-ctl { display:flex; align-items:center; gap:6px; }
-    .theme-ctl > span { font-size:11px; color:var(--muted); }
+    .theme-switch { display:inline-flex; align-items:center; gap:2px; padding:2px;
+                    background:var(--bg); border:1px solid var(--line); border-radius:999px; }
+    .theme-switch button { background:none; border:none; padding:5px 9px; border-radius:999px;
+                           color:var(--muted); cursor:pointer; display:inline-flex;
+                           align-items:center; justify-content:center; font-family:inherit; }
+    .theme-switch button:hover { color:var(--fg); }
+    .theme-switch button.active { background:var(--panel); color:var(--fg);
+                                  box-shadow:0 1px 2px rgba(0,0,0,.18); }
+    .theme-switch svg { width:15px; height:15px; display:block; }
 
     /* Login */
     #login { position:fixed; inset:0; z-index:50; background:var(--bg);
@@ -263,11 +272,12 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
         <input id="pass" type="password" name="current-password" autocomplete="current-password" required /></div>
       <button class="btn-primary" type="submit" id="signin">Sign in</button>
       <div class="login-err" id="loginErr"></div>
-      <div class="theme-ctl" style="margin-top:18px; justify-content:center;">
-        <span>Theme</span>
-        <select class="theme-select" aria-label="Theme">
-          <option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
-        </select>
+      <div style="margin-top:18px; display:flex; justify-content:center;">
+        <div class="theme-switch" role="radiogroup" aria-label="Theme">
+          <button type="button" data-theme="light" title="Light" aria-label="Light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+          <button type="button" data-theme="dark" title="Dark" aria-label="Dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+          <button type="button" data-theme="system" title="System" aria-label="System"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></button>
+        </div>
       </div>
     </form>
   </div>
@@ -281,10 +291,11 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
         <button data-view="jobs">Jobs</button>
       </nav>
       <span class="spacer"></span>
-      <label class="theme-ctl"><span>Theme</span>
-        <select class="theme-select" aria-label="Theme">
-          <option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option>
-        </select></label>
+      <div class="theme-switch" role="radiogroup" aria-label="Theme">
+        <button type="button" data-theme="light" title="Light" aria-label="Light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></button>
+        <button type="button" data-theme="dark" title="Dark" aria-label="Dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+        <button type="button" data-theme="system" title="System" aria-label="System"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></button>
+      </div>
       <span class="muted" id="who"></span>
       <button class="btn" id="logout">Sign out</button>
     </header>
@@ -292,7 +303,7 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
       <!-- Overview view -->
       <section class="view active" id="view-overview">
         <div class="toolbar">
-          <button class="btn" id="refreshOverview">Refresh</button>
+          <button class="btn" id="refreshOverview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3.51-7.13"/><path d="M21 4v5h-5"/></svg>Refresh</button>
           <span class="muted" id="overviewMeta"></span>
         </div>
         <section class="kpis" id="kpis"></section>
@@ -322,7 +333,7 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
       <!-- Plugins view -->
       <section class="view" id="view-plugins">
         <div class="toolbar">
-          <button class="btn" id="refresh">Refresh</button>
+          <button class="btn" id="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3.51-7.13"/><path d="M21 4v5h-5"/></svg>Refresh</button>
           <span class="muted" id="count"></span>
           <label style="margin-left:auto; display:flex; align-items:center; gap:8px;">
             Watch directory <input type="checkbox" id="watch" /></label>
@@ -336,8 +347,8 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
       <!-- Jobs view -->
       <section class="view" id="view-jobs">
         <div class="toolbar">
-          <button class="btn primary" id="newJob">New job</button>
-          <button class="btn" id="refreshJobs">Refresh</button>
+          <button class="btn primary" id="newJob"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>New job</button>
+          <button class="btn" id="refreshJobs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3.51-7.13"/><path d="M21 4v5h-5"/></svg>Refresh</button>
           <span class="muted" id="jobsCount"></span>
         </div>
         <div class="grid">
@@ -405,21 +416,25 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    // ---------- Theme (multiple synced selectors: header + login) ----------
+    // ---------- Theme (segmented sun/moon/system buttons, synced across header + login) ----------
     const THEME_KEY='orcha_theme';
+    function syncThemeButtons(t){
+      document.querySelectorAll('.theme-switch button').forEach(b =>
+        b.classList.toggle('active', b.dataset.theme === t));
+    }
     function setTheme(t){
       document.documentElement.dataset.theme=t;
       localStorage.setItem(THEME_KEY, t);
-      document.querySelectorAll('.theme-select').forEach(s=>{ s.value=t; });
+      syncThemeButtons(t);
       if (flow.job) flow.render(); // recolor for the new theme
+      if ($('view-overview').classList.contains('active')) loadOverview();
     }
     (function(){
       const t=localStorage.getItem(THEME_KEY)||'system';
       document.documentElement.dataset.theme=t;
-      document.querySelectorAll('.theme-select').forEach(s=>{
-        s.value=t;
-        s.addEventListener('change', e=>setTheme(e.target.value));
-      });
+      syncThemeButtons(t);
+      document.querySelectorAll('.theme-switch button').forEach(b =>
+        b.addEventListener('click', () => setTheme(b.dataset.theme)));
     })();
 
     // ---------- Toast ----------
@@ -655,12 +670,6 @@ inline constexpr const char kDashboardHtml[] = R"HTML(<!DOCTYPE html>
         + runList.length + ' recent run(s)';
     }
     $('refreshOverview').addEventListener('click', loadOverview);
-
-    // Re-render charts when the theme changes so colors track the palette.
-    document.querySelectorAll('.theme-select').forEach(sel =>
-      sel.addEventListener('change', () => {
-        if ($('view-overview').classList.contains('active')) loadOverview();
-      }));
 
     // ================= Plugins =================
     function pRow(p){
