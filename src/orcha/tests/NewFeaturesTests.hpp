@@ -188,10 +188,10 @@ server:
 
         Workflow::RollbackOrchestrator orchestrator(registry, logger);
 
-        web::json::value params;
-        params[U("key")] = web::json::value::string("value");
-        web::json::value output;
-        output[U("result")] = web::json::value::string("success");
+        Orcha::Json params;
+        params["key"] = "value";
+        Orcha::Json output;
+        output["result"] = "success";
 
         orchestrator.record_completed_step(0, "cmd1", params, output);
         orchestrator.record_completed_step(1, "cmd2", params, output);
@@ -225,11 +225,11 @@ server:
 
         Workflow::WorkflowStep step1;
         step1.command_name = "echo";
-        step1.params = web::json::value::object();
+        step1.params = Orcha::Json::object();
 
         Workflow::WorkflowStep step2;
         step2.command_name = "echo";
-        step2.params = web::json::value::object();
+        step2.params = Orcha::Json::object();
 
         def.steps = {step1, step2};
 
@@ -246,12 +246,12 @@ server:
 
         Workflow::WorkflowStep step1;
         step1.command_name = "echo";
-        step1.params = web::json::value::object();
+        step1.params = Orcha::Json::object();
 
         Workflow::WorkflowStep step2;
         step2.command_name = "echo";
-        web::json::value params2;
-        params2[U("message")] = web::json::value::string("Result: {{step1.output.value}}");
+        Orcha::Json params2;
+        params2["message"] = "Result: {{step1.output.value}}";
         step2.params = params2;
 
         def.steps = {step1, step2};
@@ -272,18 +272,18 @@ server:
 
         Workflow::WorkflowStep step0, step1, step2, step3;
         step0.command_name = "echo";
-        step0.params = web::json::value::object();
+        step0.params = Orcha::Json::object();
 
         step1.command_name = "echo";
-        step1.params = web::json::value::object();
+        step1.params = Orcha::Json::object();
 
         step2.command_name = "echo";
-        step2.params = web::json::value::object();
+        step2.params = Orcha::Json::object();
 
-        web::json::value params3;
-        params3[U("a")] = web::json::value::string("{{step1.output}}");
-        params3[U("b")] = web::json::value::string("{{step2.output}}");
-        params3[U("c")] = web::json::value::string("{{step3.output}}");
+        Orcha::Json params3;
+        params3["a"] = "{{step1.output}}";
+        params3["b"] = "{{step2.output}}";
+        params3["c"] = "{{step3.output}}";
         step3.command_name = "aggregate";
         step3.params = params3;
 
@@ -305,10 +305,10 @@ server:
 
             Workflow::WorkflowStep step0, step1;
             step0.command_name = "echo";
-            step0.params = web::json::value::object();
+            step0.params = Orcha::Json::object();
 
-            web::json::value params1;
-            params1[U("input")] = web::json::value::string("{{step1.output}}");
+            Orcha::Json params1;
+            params1["input"] = "{{step1.output}}";
             step1.command_name = "process";
             step1.params = params1;
 
@@ -324,10 +324,10 @@ server:
 
             Workflow::WorkflowStep step0, step1;
             step0.command_name = "echo";
-            step0.params = web::json::value::object();
+            step0.params = Orcha::Json::object();
 
             step1.command_name = "echo";
-            step1.params = web::json::value::object();
+            step1.params = Orcha::Json::object();
 
             def.steps = {step0, step1};
 
